@@ -11,7 +11,7 @@ app.use(express.static(__dirname));
 
 // --- SERVICES API ---
 app.get('/api/services', (req, res) => {
-  db.all("SELECT *, COALESCE(active, 1) as active FROM services ORDER BY category, name", (err, rows) => {
+  db.all("SELECT *, datetime(created_at, '+5 hours') as created_at, COALESCE(active, 1) as active FROM services ORDER BY category, name", (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
@@ -101,7 +101,7 @@ app.get('/api/orders/:id/items', (req, res) => {
 });
 
 app.get('/api/orders', (req, res) => {
-  db.all("SELECT * FROM orders ORDER BY created_at DESC", (err, rows) => {
+  db.all("SELECT *, datetime(created_at, '+5 hours') as created_at FROM orders ORDER BY created_at DESC", (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
@@ -109,8 +109,8 @@ app.get('/api/orders', (req, res) => {
 
 // --- STATS API ---
 app.get('/api/stats', (req, res) => {
-  const today = new Date().toISOString().split('T')[0];
-  db.get("SELECT SUM(total_amount) as total FROM orders WHERE date(created_at) = ?", [today], (err, row) => {
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tashkent' });
+  db.get("SELECT SUM(total_amount) as total FROM orders WHERE date(created_at, '+5 hours') = ?", [today], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ daily_revenue: row.total || 0 });
   });
@@ -155,9 +155,10 @@ app.get('/api/attendance', (req, res) => {
 
 app.post('/api/attendance', (req, res) => {
   const { workerId, workerName, status, timeIn, timeOut, date, note } = req.body;
+  const finalDate = date || new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tashkent' });
   db.run(
     "INSERT INTO attendance (worker_id, worker_name, status, time_in, time_out, date, note) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    [workerId, workerName, status, timeIn, timeOut, date, note],
+    [workerId, workerName, status, timeIn, timeOut, finalDate, note],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ id: this.lastID, success: true });
@@ -194,7 +195,7 @@ app.post('/api/sales', (req, res) => {
 
 // --- EXPENSES API ---
 app.get('/api/expenses', (req, res) => {
-  db.all("SELECT * FROM expenses ORDER BY created_at DESC", (err, rows) => {
+  db.all("SELECT *, datetime(created_at, '+5 hours') as created_at FROM expenses ORDER BY created_at DESC", (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
@@ -214,7 +215,7 @@ app.post('/api/expenses', (req, res) => {
 
 // --- CLIENTS API ---
 app.get('/api/clients', (req, res) => {
-  db.all("SELECT * FROM clients ORDER BY created_at DESC", (err, rows) => {
+  db.all("SELECT *, datetime(created_at, '+5 hours') as created_at FROM clients ORDER BY created_at DESC", (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
