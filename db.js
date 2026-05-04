@@ -1,4 +1,6 @@
 const fs = require('fs');
+const path = require('path');
+const sqlite3 = require('sqlite3').verbose();
 
 // Render platformasida /data papkasi bo'lsa o'sha yerga, bo'lmasa lokal papkaga saqlaydi
 const dbDir = fs.existsSync('/data') ? '/data' : __dirname;
