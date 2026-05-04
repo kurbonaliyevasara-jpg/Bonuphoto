@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonu Photo Staff — POS Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary: #ec4899;
+            --accent: #10b981;
+            --background: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --glass: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --sidebar-width: 380px;
+        }
+
+        [data-theme="light"] {
+            --background: #f1f5f9;
+            --surface: #ffffff;
+            --surface-hover: #f8fafc;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --glass: rgba(255, 255, 255, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            overflow: hidden;
+            /* Prevent body scroll, use container scroll */
+            height: 100vh;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 24px;
+        }
+
+        /* Sidebar Styling */
+        .order-sidebar {
+            width: var(--sidebar-width);
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+            color: white;
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo-text h1 {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        [data-theme="light"] .logo-text h1 {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+        }
+
+        .logo-text p {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .search-bar {
+            position: relative;
+            flex: 1;
+            max-width: 500px;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text);
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--surface-hover);
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 15px;
+            color: var(--text-muted);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Categories */
+        .categories {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+        }
+
+        .categories::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-btn {
+            padding: 12px 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .category-btn:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+            transform: translateY(-2px);
+        }
+
+        .category-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Products Grid */
+        .products-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            grid-auto-rows: max-content;
+            align-items: start;
+            gap: 20px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .products-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .products-grid::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        .product-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            min-height: 200px;
+            /* Matn ko'rinishi uchun minimal balandlik */
+        }
+
+        .product-card:hover {
+            background: var(--surface-hover);
+            border-color: var(--primary);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-card:active {
+            transform: scale(0.95);
+        }
+
+        .product-icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(var(--icon-color-rgb), 0.1);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            font-size: 32px;
+            transition: all 0.3s;
+            color: var(--icon-color);
+        }
+
+        .product-card:hover .product-icon {
+            background: var(--icon-color);
+            color: white;
+            transform: rotate(5deg) scale(1.1);
+            box-shadow: 0 8px 20px rgba(var(--icon-color-rgb), 0.4);
+        }
+
+        .product-name {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 8px;
+            color: var(--text);
+            /* Theme aware color */
+            line-height: 1.3;
+        }
+
+        .product-price {
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 14px;
+            margin-top: auto;
+            /* Narxni pastga tushirish */
+            background: rgba(16, 185, 129, 0.1);
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--secondary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s;
+        }
+
+        .product-badge.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Sidebar Order */
+        .sidebar-header {
+            padding: 30px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h2 {
+            font-size: 22px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .sidebar-header h2 i {
+            color: var(--primary);
+        }
+
+        .order-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .order-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .item-price {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .qty-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: none;
+            background: var(--surface-hover);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .qty-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .item-qty {
+            font-weight: 700;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* Footer / Total */
+        .sidebar-footer {
+            padding: 30px 24px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .total-label {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .total-value {
+            font-weight: 800;
+            font-size: 18px;
+        }
+
+        .grand-total {
+            margin-top: 12px;
+            margin-bottom: 24px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .grand-total .total-label {
+            color: var(--text);
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .grand-total .total-value {
+            color: var(--primary);
+            font-size: 26px;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            border: none;
+            border-radius: 18px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .checkout-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.5);
+        }
+
+        .checkout-btn:active {
+            transform: translateY(0);
+        }
+
+        .pay-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--background);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .pay-btn:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+
+        .pay-btn.active {
+            background: rgba(99, 102, 241, 0.1) !important;
+            border-color: var(--primary) !important;
+            color: var(--primary) !important;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Success Overlay */
+        .success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s;
+        }
+
+        .success-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            color: white;
+            margin-bottom: 24px;
+            transform: scale(0.5);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .success-overlay.active .success-icon {
+            transform: scale(1);
+        }
+
+        .theme-toggle {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 45px;
+            height: 45px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--surface-hover);
+            transform: rotate(15deg);
+        }
+
+        [data-theme="light"] .logo-text h1 {
+            background: linear-gradient(to right, #1e293b, #64748b);
+            -webkit-background-clip: text;
+        }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .app-container {
+                flex-direction: column;
+            }
+
+            .order-sidebar {
+                width: 100%;
+                height: 40vh;
+                border-left: none;
+                border-top: 1px solid var(--border);
+            }
+
+            .main-content {
+                height: 60vh;
+            }
+        }
+    </style>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body style="visibility: hidden;">
+
+    <!-- Password Protection Overlay -->
+    <div id="login-overlay"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:99999; display:flex; align-items:center; justify-content:center; flex-direction:column; visibility: visible;">
+        <div
+            style="background:#1e293b; padding:40px; border-radius:24px; border:1px solid #334155; box-shadow:0 20px 50px rgba(0,0,0,0.5); width:90%; max-width:400px; text-align:center;">
+            <div
+                style="width:60px; height:60px; background:linear-gradient(135deg, #6366f1, #ec4899); border-radius:18px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:24px; color:white; font-weight:800;">
+                B</div>
+            <h2 style="margin-bottom:10px; font-family:'Outfit', sans-serif; color: white;">Xodim Paneli #1</h2>
+            <p style="color:#94a3b8; font-size:14px; margin-bottom:25px;">Kirish uchun parolni kiriting</p>
+            <input type="password" id="auth-pass" placeholder="Parol..."
+                style="width:100%; padding:14px; background:#0f172a; border:1px solid #334155; border-radius:12px; color:white; font-size:16px; margin-bottom:20px; text-align:center; outline:none;">
+            <button onclick="checkAuth()"
+                style="width:100%; padding:14px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:700; cursor:pointer; transition:0.3s;">KIRISH</button>
+            <p id="auth-error" style="color:#ec4899; font-size:12px; margin-top:15px; display:none;">Xato parol! Qayta urinib
+                ko'ring.</p>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const PAGE_KEY = "auth_xodim1";
+            const CORRECT_PASS = "Bonu0405";
+
+            window.checkAuth = function () {
+                const pass = document.getElementById('auth-pass').value;
+                if (pass === CORRECT_PASS) {
+                    localStorage.setItem(PAGE_KEY, 'true');
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.body.style.visibility = 'visible';
+                } else {
+                    document.getElementById('auth-error').style.display = 'block';
+                    document.getElementById('auth-pass').value = '';
+                }
+            };
+
+            window.logout = function () {
+                if (confirm("Tizimdan chiqishni xohlaysizmi?")) {
+                    localStorage.removeItem(PAGE_KEY);
+                    location.reload();
+                }
+            };
+
+            if (localStorage.getItem(PAGE_KEY) === 'true') {
+                document.write('<style>#login-overlay { display: none !important; }</style>');
+                document.documentElement.style.visibility = 'visible';
+                window.addEventListener('DOMContentLoaded', () => {
+                    document.body.style.visibility = 'visible';
+                });
+            }
+
+            window.addEventListener('load', () => {
+                if (localStorage.getItem(PAGE_KEY) === 'true') {
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.body.style.visibility = 'visible';
+                }
+                document.getElementById('auth-pass').addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') checkAuth();
+                });
+            });
+        })();
+    </script>
+
+    <div class="app-container">
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div class="logo-section">
+                    <div class="logo-icon">B</div>
+                    <div class="logo-text">
+                        <h1>Bonu Photo</h1>
+                        <p>STAFF TERMINAL — XODIM #1</p>
+                    </div>
+                </div>
+
+                <div class="search-bar">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Xizmat nomini yozing..." id="productSearch">
+                </div>
+
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+                    <i data-lucide="moon" id="themeIcon"></i>
+                </button>
+
+                <button class="theme-toggle" onclick="logout()" title="Chiqish" style="color: #ec4899; border-color: rgba(236, 72, 153, 0.3);">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </header>
+
+            <div class="categories" id="categoryTabs">
+                <button class="category-btn active" data-category="all">Hammasi</button>
+                <button class="category-btn" data-category="hujjat">Hujjat rasm</button>
+                <button class="category-btn" data-category="print">Rasm chiqarish</button>
+                <button class="category-btn" data-category="ofis">Kserokopiya & Ofis</button>
+                <button class="category-btn" data-category="design">Dizayn & Montaj</button>
+                <button class="category-btn" data-category="frame">Ramkalar</button>
+                <button class="category-btn" onclick="openOtherModal()"
+                    style="background:rgba(16,185,129,0.1); border-color:var(--accent); color:var(--accent);">Boshqa
+                    +</button>
+            </div>
+
+            <div class="products-grid" id="productsGrid">
+                <!-- Products will be injected here -->
+            </div>
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="order-sidebar">
+            <div class="sidebar-header">
+                <h2><i data-lucide="shopping-cart"></i> Buyurtma</h2>
+            </div>
+
+            <div class="order-items" id="orderList">
+                <!-- Order items will be injected here -->
+                <div style="text-align: center; color: var(--text-muted); margin-top: 40px;">
+                    <i data-lucide="shopping-bag"
+                        style="width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5;"></i>
+                    <p>Hozircha buyurtma yo'q</p>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="total-row">
+                    <span class="total-label">Subtotal</span>
+                    <span class="total-value" id="subtotalPrice">0 so'm</span>
+                </div>
+                <div class="total-row grand-total">
+                    <span class="total-label">Jami</span>
+                    <span class="total-value" id="totalPrice">0 so'm</span>
+                </div>
+
+                <div style="margin: 15px 0; padding-top: 15px; border-top: 1px solid var(--border);">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">To'lov usuli:</div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="pay-btn active" data-pay="Karta" onclick="setPay(this)"
+                            style="flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--primary); background: rgba(108, 63, 232, 0.1); color: var(--primary); cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">💳
+                            Karta</button>
+                        <button class="pay-btn" data-pay="Naqd" onclick="setPay(this)"
+                            style="flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">💵
+                            Naqd</button>
+                    </div>
+                </div>
+
+                <button class="checkout-btn" id="checkoutBtn">
+                    <i data-lucide="check-circle"></i> TASDIQLASH
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Success State -->
+    <div class="success-overlay" id="successOverlay">
+        <div class="success-icon"><i data-lucide="check"></i></div>
+        <h2 style="font-size: 32px; margin-bottom: 12px;">Muvaffaqiyatli!</h2>
+        <p style="color: var(--text-muted); margin-bottom: 30px;">Buyurtma saqlandi va kvitansiya tayyor.</p>
+        <button class="category-btn active" onclick="resetApp()">YANGI BUYURTMA</button>
+    </div>
+
+    <!-- Other Service Modal -->
+    <div id="otherModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
+        <div
+            style="background:var(--surface); padding:30px; border-radius:24px; width:100%; max-width:400px; border:1px solid var(--border); box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+            <h2 style="margin-bottom:20px; font-family:'Outfit';">➕ Boshqa xizmat</h2>
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Xizmat
+                    nomi</label>
+                <input type="text" id="otherName" placeholder="Masalan: Fotomontaj..."
+                    style="width:100%; padding:12px; background:var(--background); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px;">
+            </div>
+            <div style="margin-bottom:25px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Narxi
+                    (so'm)</label>
+                <input type="number" id="otherPrice" placeholder="Masalan: 25000"
+                    style="width:100%; padding:12px; background:var(--background); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px;">
+            </div>
+            <div style="display:flex; gap:12px;">
+                <button onclick="closeOtherModal()"
+                    style="flex:1; padding:14px; border-radius:12px; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; font-weight:600;">Bekor
+                    qilish</button>
+                <button onclick="addOtherService()"
+                    style="flex:1; padding:14px; border-radius:12px; border:none; background:var(--primary); color:white; cursor:pointer; font-weight:700;">Qo'shish</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_URL = 'http://localhost:3050/api';
+        let products = [];
+        let cart = [];
+
+        async function fetchProducts() {
+            try {
+                const res = await fetch(`${API_URL}/services`);
+                const data = await res.json();
+                products = data.filter(s => (s.active == 1 || s.active === true || s.active === null || s.active === undefined) && (s.worker_name === 'Xodim 1'));
+                updateUI();
+            } catch (e) {
+                console.error('Fetch Error:', e);
+            }
+        }
+
+        // Initialize UI
+        async function init() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            await fetchProducts();
+            setupEventListeners();
+            loadTheme();
+        }
+
+        function renderProducts(items) {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+
+            items.forEach(product => {
+                const cartItem = cart.find(item => item.id === product.id);
+                const qty = cartItem ? cartItem.quantity : 0;
+
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.onclick = () => addToCart(product);
+                card.style.setProperty('--icon-color', product.color);
+                card.style.setProperty('--icon-color-rgb', product.rgb);
+                card.innerHTML = `
+                <div class="product-badge ${qty > 0 ? 'visible' : ''}">${qty}</div>
+                <div class="product-icon">${product.icon}</div>
+                <div class="product-name">${product.name}</div>
+                <div class="product-price">${product.price.toLocaleString()} so'm</div>
+            `;
+                grid.appendChild(card);
+            });
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function addToCart(product) {
+            const existing = cart.find(item => item.id === product.id);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            updateUI();
+        }
+
+        function removeFromCart(productId) {
+            const index = cart.findIndex(item => item.id === productId);
+            if (index > -1) {
+                if (cart[index].quantity > 1) {
+                    cart[index].quantity -= 1;
+                } else {
+                    cart.splice(index, 1);
+                }
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            renderOrder();
+            renderProducts(getFilteredProducts());
+            calculateTotal();
+        }
+
+        function renderOrder() {
+            const list = document.getElementById('orderList');
+            if (cart.length === 0) {
+                list.innerHTML = `
+                <div style="text-align: center; color: var(--text-muted); margin-top: 40px;">
+                    <i data-lucide="shopping-bag" style="width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5;"></i>
+                    <p>Hozircha buyurtma yo'q</p>
+                </div>
+            `;
+                lucide.createIcons();
+                return;
+            }
+
+            list.innerHTML = '';
+            cart.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'order-item';
+                div.innerHTML = `
+                <div class="item-info">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price">${(item.price * item.quantity).toLocaleString()} so'm</div>
+                </div>
+                <div class="item-controls">
+                    <button class="qty-btn" onclick="removeFromCart(${item.id})">-</button>
+                    <span class="item-qty">${item.quantity}</span>
+                    <button class="qty-btn" onclick="addToCart(products.find(p => p.id === ${item.id}))">+</button>
+                </div>
+            `;
+                list.appendChild(div);
+            });
+        }
+
+        function calculateTotal() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('subtotalPrice').innerText = total.toLocaleString() + " so'm";
+            document.getElementById('totalPrice').innerText = total.toLocaleString() + " so'm";
+        }
+
+        function getFilteredProducts() {
+            const activeCat = document.querySelector('.category-btn.active').dataset.category;
+            const searchTerm = document.getElementById('productSearch').value.toLowerCase();
+
+            return products.filter(p => {
+                const matchesCat = activeCat === 'all' || p.category === activeCat;
+                const matchesSearch = p.name.toLowerCase().includes(searchTerm);
+                return matchesCat && matchesSearch;
+            });
+        }
+
+        function setupEventListeners() {
+            // Category filtering
+            document.getElementById('categoryTabs').addEventListener('click', (e) => {
+                if (e.target.classList.contains('category-btn')) {
+                    document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    updateUI();
+                }
+            });
+
+            // Search
+            document.getElementById('productSearch').addEventListener('input', updateUI);
+
+            // Checkout
+            document.getElementById('checkoutBtn').addEventListener('click', async () => {
+                if (cart.length === 0) return;
+
+                const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const payMethod = document.querySelector('.pay-btn.active').dataset.pay;
+
+                const orderData = {
+                    client_name: 'Staff Order',
+                    client_phone: '',
+                    total_amount: total,
+                    worker_name: 'Xodim 1',
+                    payment_method: payMethod,
+                    items: cart.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity
+                    }))
+                };
+
+                try {
+                    const res = await fetch(`${API_URL}/orders`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(orderData)
+                    });
+                    if (res.ok) {
+                        document.getElementById('successOverlay').classList.add('active');
+                    }
+                } catch (e) {
+                    alert('Xatolik yuz berdi!');
+                }
+            });
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            if (document.documentElement.getAttribute('data-theme') === 'light') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                icon.setAttribute('data-lucide', 'moon');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                icon.setAttribute('data-lucide', 'sun');
+            }
+            lucide.createIcons();
+        }
+
+        function loadTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            const icon = document.getElementById('themeIcon');
+            icon.setAttribute('data-lucide', theme === 'light' ? 'sun' : 'moon');
+            lucide.createIcons();
+        }
+
+        function resetApp() {
+            cart = [];
+            document.getElementById('successOverlay').classList.remove('active');
+            document.getElementById('productSearch').value = '';
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('[data-category="all"]').classList.add('active');
+            updateUI();
+        }
+
+        function setPay(btn) {
+            document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function openOtherModal() {
+            document.getElementById('otherModal').style.display = 'flex';
+            document.getElementById('otherName').focus();
+        }
+
+        function closeOtherModal() {
+            document.getElementById('otherModal').style.display = 'none';
+            document.getElementById('otherName').value = '';
+            document.getElementById('otherPrice').value = '';
+        }
+
+        function addOtherService() {
+            const name = document.getElementById('otherName').value.trim();
+            const price = parseInt(document.getElementById('otherPrice').value);
+
+            if (!name || !price) {
+                alert('Iltimos, nom va narxni kiriting!');
+                return;
+            }
+
+            const product = {
+                id: 'other-' + Date.now(),
+                name: name,
+                price: price,
+                icon: '✨',
+                color: '#10b981',
+                rgb: '16, 185, 129'
+            };
+
+            addToCart(product);
+            closeOtherModal();
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

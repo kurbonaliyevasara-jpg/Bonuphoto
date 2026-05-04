@@ -1,0 +1,2536 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bonu Photo — Boshqaruv Tizimi</title>
+  <style>
+    :root {
+      --primary: #6C3FE8;
+      --primary-light: #8B5CF6;
+      --accent2: #EC4899;
+      --success: #10B981;
+      --danger: #EF4444;
+      --warning: #F59E0B;
+      --info: #3B82F6;
+      --bg: #0F0C1A;
+      --bg2: #1A1530;
+      --bg3: #231E3A;
+      --card: #1E1B33;
+      --card2: #272347;
+      --border: rgba(108, 63, 232, 0.18);
+      --text: #F1EEF9;
+      --text2: #A89CC8;
+      --text3: #7B6FA3;
+      --shadow: 0 8px 32px rgba(108, 63, 232, 0.18);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: all 0.25s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    [data-theme="light"] {
+      --bg: #F8FAFC;
+      --bg2: #FFFFFF;
+      --bg3: #F1F5F9;
+      --card: #FFFFFF;
+      --card2: #F8FAFC;
+      --border: rgba(108, 63, 232, 0.12);
+      --text: #1E293B;
+      --text2: #475569;
+      --text3: #94A3B8;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(108, 63, 232, 0.1);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 255px;
+      background: linear-gradient(160deg, var(--bg2), var(--bg3));
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      padding: 0 0 20px;
+      box-shadow: 4px 0 24px rgba(0, 0, 0, .15);
+      transition: var(--transition);
+    }
+
+    [data-theme="dark"] .sidebar {
+      box-shadow: 4px 0 24px rgba(0, 0, 0, .4);
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--primary), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 14px rgba(108, 63, 232, .5);
+    }
+
+    .logo-name {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      color: var(--text3);
+      letter-spacing: .5px;
+    }
+
+    .nav-sec {
+      padding: 14px 14px 6px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .nav-lbl {
+      font-size: 10px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 0 8px 7px;
+      font-weight: 600;
+    }
+
+    .ni {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 13px;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text2);
+      font-size: 13.5px;
+      font-weight: 500;
+      margin-bottom: 2px;
+      position: relative;
+    }
+
+    .ni:hover {
+      background: rgba(108, 63, 232, .12);
+      color: var(--text);
+    }
+
+    .ni.active {
+      background: linear-gradient(90deg, rgba(108, 63, 232, .28), rgba(108, 63, 232, .06));
+      color: var(--primary-light);
+    }
+
+    .ni.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 20%;
+      bottom: 20%;
+      width: 3px;
+      background: var(--primary-light);
+      border-radius: 2px;
+    }
+
+    .ni .ic {
+      font-size: 17px;
+      width: 20px;
+      text-align: center;
+    }
+
+    .badge {
+      margin-left: auto;
+      background: var(--accent2);
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .topbar {
+      position: fixed;
+      left: 255px;
+      top: 0;
+      right: 0;
+      height: 62px;
+      background: var(--bg);
+      background-color: rgba(var(--bg-rgb), 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 26px;
+      z-index: 90;
+      transition: var(--transition);
+    }
+
+    [data-theme="light"] .topbar {
+      background: rgba(248, 250, 252, 0.9);
+    }
+
+    [data-theme="dark"] .topbar {
+      background: rgba(15, 12, 26, 0.9);
+    }
+
+    .pg-title {
+      font-size: 19px;
+      font-weight: 700;
+    }
+
+    .topbar-r {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .date-b {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      color: var(--text2);
+    }
+
+    .btn-add {
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(108, 63, 232, .4);
+      transition: var(--transition);
+    }
+
+    .btn-add:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(108, 63, 232, .5);
+    }
+
+    .av {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      transition: var(--transition);
+    }
+
+    .theme-toggle:hover {
+      background: var(--primary);
+      color: #fff;
+      transform: rotate(15deg);
+    }
+
+    .main {
+      margin-left: 255px;
+      margin-top: 62px;
+      padding: 26px;
+      min-height: calc(100vh - 62px);
+      transition: var(--transition);
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+      animation: fadeIn .3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .g4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .g3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .g2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+    }
+
+    .card:hover {
+      border-color: rgba(108, 63, 232, .35);
+      transform: translateY(-2px);
+    }
+
+    .sc {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sc .gl {
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      opacity: .12;
+      filter: blur(18px);
+    }
+
+    .sc .lbl {
+      font-size: 11.5px;
+      color: var(--text3);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
+
+    .sc .val {
+      font-size: 26px;
+      font-weight: 800;
+      margin: 5px 0 3px;
+      letter-spacing: -1px;
+    }
+
+    .sc .chg {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .sc .ib {
+      font-size: 33px;
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: .14;
+    }
+
+    .up {
+      color: var(--success);
+    }
+
+    .down {
+      color: var(--danger);
+    }
+
+    .tw {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    thead th {
+      background: var(--bg3);
+      padding: 11px 15px;
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--text3);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-top: 1px solid var(--border);
+      transition: var(--transition);
+    }
+
+    tbody tr:hover {
+      background: rgba(108, 63, 232, .06);
+    }
+
+    tbody td {
+      padding: 12px 15px;
+      color: var(--text2);
+    }
+
+    tbody td strong {
+      color: var(--text);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .pg {
+      background: rgba(16, 185, 129, .15);
+      color: #10B981;
+    }
+
+    .pr {
+      background: rgba(239, 68, 68, .15);
+      color: #EF4444;
+    }
+
+    .py {
+      background: rgba(245, 158, 11, .15);
+      color: #F59E0B;
+    }
+
+    .pb {
+      background: rgba(59, 130, 246, .15);
+      color: #3B82F6;
+    }
+
+    .pp {
+      background: rgba(108, 63, 232, .18);
+      color: var(--primary-light);
+    }
+
+    .fg {
+      margin-bottom: 15px;
+    }
+
+    .fl {
+      font-size: 11.5px;
+      color: var(--text3);
+      font-weight: 600;
+      margin-bottom: 5px;
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .fi,
+    .fs,
+    .fta {
+      width: 100%;
+      padding: 10px 13px;
+      border-radius: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13.5px;
+      transition: var(--transition);
+      outline: none;
+      font-family: inherit;
+    }
+
+    .fi:focus,
+    .fs:focus,
+    .fta:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(108, 63, 232, .15);
+    }
+
+    .fs option {
+      background: var(--bg3);
+      color: var(--text);
+    }
+
+    .fta {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .btn {
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      font-family: inherit;
+    }
+
+    .btn-s {
+      background: linear-gradient(135deg, #059669, #10B981);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, .3);
+    }
+
+    .btn-s:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-d {
+      background: linear-gradient(135deg, #DC2626, #EF4444);
+      color: #fff;
+    }
+
+    .btn-o {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+    }
+
+    .btn-o:hover {
+      border-color: var(--primary-light);
+      color: var(--primary-light);
+    }
+
+    .btn-p {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+    }
+
+    .bsm {
+      padding: 6px 13px;
+      font-size: 12px;
+      border-radius: 7px;
+    }
+
+    .bi {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 5px 9px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: var(--transition);
+    }
+
+    .bi:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .mo {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .7);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mo.open {
+      display: flex;
+      animation: fadeIn .2s ease;
+    }
+
+    .md {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 26px;
+      width: 480px;
+      max-width: 90vw;
+      max-height: 85vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .3);
+      transition: var(--transition);
+    }
+
+    [data-theme="dark"] .md {
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .6);
+    }
+
+    .mh {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .mt {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .mc {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .mc:hover {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+
+    .cbar {
+      display: flex;
+      align-items: flex-end;
+      gap: 7px;
+      height: 150px;
+      padding: 8px 0 0;
+    }
+
+    .bcol {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .bar {
+      width: 100%;
+      border-radius: 5px 5px 0 0;
+      transition: height .6s ease;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .bar:hover::after {
+      content: attr(data-v);
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 5px;
+      white-space: nowrap;
+    }
+
+    .bl {
+      font-size: 10px;
+      color: var(--text3);
+      font-weight: 500;
+    }
+
+    .pb-wrap {
+      background: var(--bg3);
+      border-radius: 20px;
+      height: 7px;
+      overflow: hidden;
+    }
+
+    .pb-fill {
+      height: 100%;
+      border-radius: 20px;
+      transition: width .8s ease;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg3);
+      padding: 4px;
+      border-radius: 9px;
+      margin-bottom: 18px;
+    }
+
+    .tab {
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text3);
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(108, 63, 232, .4);
+    }
+
+    .tab:hover:not(.active) {
+      color: var(--text);
+    }
+
+    .clk {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -3px;
+      text-align: center;
+      padding: 18px 0;
+      background: linear-gradient(135deg, var(--primary-light), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .dd {
+      text-align: center;
+      color: var(--text3);
+      font-size: 13px;
+      margin-top: -10px;
+    }
+
+    .wc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      transition: var(--transition);
+    }
+
+    .wc:hover {
+      border-color: rgba(108, 63, 232, .35);
+    }
+
+    .wa {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .wi {
+      flex: 1;
+    }
+
+    .wn {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .wr {
+      font-size: 11.5px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    .ws {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 5px;
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dg {
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+
+    .dr {
+      background: var(--danger);
+    }
+
+    .dy {
+      background: var(--warning);
+    }
+
+    .sh {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .st {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .ss {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    .si {
+      position: relative;
+    }
+
+    .sq {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 13px 8px 36px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      outline: none;
+      transition: var(--transition);
+      width: 200px;
+      font-family: inherit;
+    }
+
+    .sic {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: var(--text3);
+    }
+
+    .sq:focus {
+      border-color: var(--primary-light);
+      width: 240px;
+    }
+
+    .div {
+      height: 1px;
+      background: var(--border);
+      margin: 18px 0;
+    }
+
+    .tl {
+      position: relative;
+      padding-left: 26px;
+    }
+
+    .tl::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary), transparent);
+    }
+
+    .tli {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .tld {
+      position: absolute;
+      left: -23px;
+      top: 4px;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+    }
+
+    .tlt {
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 2px;
+    }
+
+    .tlx {
+      font-size: 12.5px;
+      color: var(--text2);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 26px;
+      right: 26px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 13px 18px;
+      font-size: 13.5px;
+      color: var(--text);
+      z-index: 9999;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .5);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all .4s cubic-bezier(.4, 0, .2, 1);
+      pointer-events: none;
+      max-width: 300px;
+    }
+
+    .toast.show {
+      transform: none;
+      opacity: 1;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg2);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+    }
+
+    /* RESPONSIVE DESIGN */
+    @media (max-width: 1024px) {
+      .sidebar {
+        left: -255px;
+      }
+      .sidebar.open {
+        left: 0;
+      }
+      .topbar {
+        left: 0;
+      }
+      .main {
+        margin-left: 0;
+      }
+      .menu-btn {
+        display: flex !important;
+      }
+      .sidebar-overlay {
+        display: block;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .g4, .g3, .g2 {
+        grid-template-columns: 1fr;
+      }
+      .topbar-r .date-b, .topbar-r .btn-add {
+        display: none;
+      }
+      .sh {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .sh .tabs {
+        width: 100%;
+        overflow-x: auto;
+      }
+      .md {
+        padding: 20px;
+        width: 95vw;
+        max-width: 95vw;
+        border-radius: 14px;
+      }
+    }
+
+    .menu-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 20px;
+      margin-right: 15px;
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 95;
+      display: none;
+      backdrop-filter: blur(4px);
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+  </style>
+</head>
+
+<body style="visibility: hidden;">
+
+  <!-- Password Protection Overlay -->
+  <div id="login-overlay"
+    style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0F0C1A; z-index:99999; display:flex; align-items:center; justify-content:center; flex-direction:column; visibility: visible;">
+    <div
+      style="background:#1E1B33; padding:40px; border-radius:24px; border:1px solid rgba(108, 63, 232, 0.2); box-shadow:0 20px 50px rgba(0,0,0,0.5); width:90%; max-width:400px; text-align:center;">
+      <div
+        style="width:60px; height:60px; background:linear-gradient(135deg, #6C3FE8, #EC4899); border-radius:18px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:24px; color:white; font-weight:800;">
+        B</div>
+      <h2 style="margin-bottom:10px; color: white; font-family: sans-serif;">Admin Panel</h2>
+      <p style="color:#7B6FA3; font-size:14px; margin-bottom:25px;">Tizimga kirish uchun parolni kiriting</p>
+      <input type="password" id="auth-pass" placeholder="Parol..."
+        style="width:100%; padding:14px; background:#0F0C1A; border:1px solid rgba(108, 63, 232, 0.2); border-radius:12px; color:white; font-size:16px; margin-bottom:20px; text-align:center; outline:none;">
+      <button onclick="checkAuth()"
+        style="width:100%; padding:14px; background:#6C3FE8; color:white; border:none; border-radius:12px; font-weight:700; cursor:pointer; transition:0.3s;">KIRISH</button>
+      <p id="auth-error" style="color:#EF4444; font-size:12px; margin-top:15px; display:none;">Xato parol! Qayta urinib
+        ko'ring.</p>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const PAGE_KEY = "auth_admin";
+      const CORRECT_PASS = "Tillobek2907";
+
+      window.checkAuth = function () {
+        const pass = document.getElementById('auth-pass').value;
+        if (pass === CORRECT_PASS) {
+          localStorage.setItem(PAGE_KEY, 'true');
+          document.getElementById('login-overlay').style.display = 'none';
+          document.body.style.visibility = 'visible';
+        } else {
+          document.getElementById('auth-error').style.display = 'block';
+          document.getElementById('auth-pass').value = '';
+        }
+      };
+
+      window.logout = function () {
+        if (confirm("Tizimdan chiqishni xohlaysizmi?")) {
+          localStorage.removeItem(PAGE_KEY);
+          location.reload();
+        }
+      };
+
+      window.toggleMenu = function () {
+        const sb = document.getElementById('sidebar');
+        const ov = document.getElementById('overlay');
+        sb.classList.toggle('open');
+        ov.classList.toggle('active');
+      };
+
+      // Menu yopish (link bosilganda)
+      const navItems = document.querySelectorAll('.ni');
+      navItems.forEach(item => {
+        item.addEventListener('click', () => {
+          if (window.innerWidth <= 1024) {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('overlay').classList.remove('active');
+          }
+        });
+      });
+
+      if (localStorage.getItem(PAGE_KEY) === 'true') {
+        document.write('<style>#login-overlay { display: none !important; }</style>');
+        document.documentElement.style.visibility = 'visible';
+        window.addEventListener('DOMContentLoaded', () => {
+          document.body.style.visibility = 'visible';
+        });
+      }
+
+      window.addEventListener('load', () => {
+        if (localStorage.getItem(PAGE_KEY) === 'true') {
+          document.getElementById('login-overlay').style.display = 'none';
+          document.body.style.visibility = 'visible';
+        }
+        document.getElementById('auth-pass').addEventListener('keypress', function (e) {
+          if (e.key === 'Enter') checkAuth();
+        });
+      });
+    })();
+  </script>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">📸</div>
+      <div>
+        <div class="logo-name">Bonu Photo</div>
+        <div class="logo-sub">BOSHQARUV TIZIMI</div>
+      </div>
+    </div>
+    <div class="nav-sec">
+      <div class="nav-lbl">Asosiy</div>
+      <div class="ni active" onclick="sp('dashboard')"><span class="ic">📊</span>Bosh sahifa</div>
+      <div class="ni" onclick="sp('attendance')"><span class="ic">🕐</span>Davomat<span class="badge" id="lb">0</span>
+      </div>
+      <div class="ni" onclick="sp('workers')"><span class="ic">👥</span>Xodimlar</div>
+      <div class="nav-lbl" style="margin-top:10px;">Moliya</div>
+      <div class="ni" onclick="sp('sales')"><span class="ic">💰</span>Savdo</div>
+      <div class="ni" onclick="sp('expenses')"><span class="ic">📤</span>Chiqimlar</div>
+      <div class="ni" onclick="sp('finance')"><span class="ic">📈</span>Moliya hisoboti</div>
+      <div class="nav-lbl" style="margin-top:10px;">Xizmatlar</div>
+      <div class="ni" onclick="sp('orders')"><span class="ic">📋</span>Buyurtmalar</div>
+      <div class="ni" onclick="sp('services')"><span class="ic">🎨</span>Xizmat turlari</div>
+      <div class="ni" onclick="spSv('Xodim 1')" style="padding-left:40px; font-size:13px; opacity:0.8;"><span
+          class="ic">👤</span>Xodim-1 xizmatlari</div>
+      <div class="ni" onclick="spSv('Xodim 2')" style="padding-left:40px; font-size:13px; opacity:0.8;"><span
+          class="ic">👤</span>Xodim-2 xizmatlari</div>
+      <div class="ni" onclick="sp('clients')"><span class="ic">🙍</span>Qarzdor Mijozlar</div>
+      <div class="nav-lbl" style="margin-top:10px;">Hisobotlar</div>
+      <div class="ni" onclick="sp('reports')"><span class="ic">📑</span>Kunlik hisobot</div>
+      <div class="ni" onclick="sp('settings')"><span class="ic">⚙️</span>Sozlamalar</div>
+      <div class="ni" onclick="logout()" style="margin-top:20px; color:var(--danger); border-top:1px solid var(--border); padding-top:15px;"><span class="ic">🚪</span>Chiqish</div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="overlay" onclick="toggleMenu()"></div>
+
+  <header class="topbar">
+    <div style="display: flex; align-items: center;">
+      <button class="menu-btn" onclick="toggleMenu()">☰</button>
+      <div class="pg-title" id="pt">📊 Bosh sahifa</div>
+    </div>
+    <div class="topbar-r">
+      <span class="date-b" id="td"></span>
+      <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Mavzuni almashtirish">🌓</button>
+      <button class="btn-add" onclick="om('modal-qa')">⚡ Tez qo'shish</button>
+      <div class="av">👤</div>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="g4">
+        <div class="card sc">
+          <div class="gl" style="background:var(--success)"></div>
+          <div class="lbl">Bugungi savdo</div>
+          <div class="val up" id="d-s">0 so'm</div>
+          <div class="chg up">↑ Ijobiy</div>
+          <div class="ib">💰</div>
+        </div>
+        <div class="card sc">
+          <div class="gl" style="background:var(--danger)"></div>
+          <div class="lbl">Bugungi chiqim</div>
+          <div class="val down" id="d-e">0 so'm</div>
+          <div class="chg down">↓ Xarajat</div>
+          <div class="ib">📤</div>
+        </div>
+        <div class="card sc">
+          <div class="gl" style="background:var(--info)"></div>
+          <div class="lbl">Sof foyda</div>
+          <div class="val" id="d-p" style="color:var(--primary-light)">0 so'm</div>
+          <div class="chg" id="d-pc">— hisoblanyapdi</div>
+          <div class="ib">📊</div>
+        </div>
+        <div class="card sc">
+          <div class="gl" style="background:var(--warning)"></div>
+          <div class="lbl">Faol xodimlar</div>
+          <div class="val" style="color:var(--warning)" id="d-w">0/0</div>
+          <div class="chg"><span id="d-l" style="color:var(--danger)">0</span> kech keldi</div>
+          <div class="ib">👥</div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="sh">
+            <div>
+              <div class="st">📊 Haftalik savdo</div>
+              <div class="ss">So'nggi 7 kun</div>
+            </div>
+          </div>
+          <div class="cbar" id="wc"></div>
+        </div>
+        <div class="card">
+          <div class="sh">
+            <div>
+              <div class="st">🕐 Bugungi davomat</div>
+              <div class="ss" id="a-sub">—</div>
+            </div><button class="btn btn-o bsm" onclick="sp('attendance')">Barchasini ko'r</button>
+          </div>
+          <div id="d-al" style="display:flex;flex-direction:column;gap:9px;"></div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="sh">
+            <div class="st">📋 So'nggi buyurtmalar</div><button class="btn btn-o bsm"
+              onclick="sp('orders')">Hammasi</button>
+          </div>
+          <div class="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mijoz</th>
+                  <th>Xizmat</th>
+                  <th>Summa</th>
+                  <th>Holat</th>
+                </tr>
+              </thead>
+              <tbody id="d-ot"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sh">
+            <div class="st">⚡ Tezkor amallar</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;">
+            <button class="card" style="cursor:pointer;text-align:center;padding:16px;border-radius:11px;"
+              onclick="sp('sales');os()">
+              <div style="font-size:26px;margin-bottom:7px;">💰</div>
+              <div style="font-size:12.5px;font-weight:600;">Savdo qo'shish</div>
+            </button>
+            <button class="card" style="cursor:pointer;text-align:center;padding:16px;border-radius:11px;"
+              onclick="sp('expenses');oe()">
+              <div style="font-size:26px;margin-bottom:7px;">📤</div>
+              <div style="font-size:12.5px;font-weight:600;">Chiqim qo'shish</div>
+            </button>
+            <button class="card" style="cursor:pointer;text-align:center;padding:16px;border-radius:11px;"
+              onclick="sp('attendance')">
+              <div style="font-size:26px;margin-bottom:7px;">✅</div>
+              <div style="font-size:12.5px;font-weight:600;">Davomat</div>
+            </button>
+            <button class="card" style="cursor:pointer;text-align:center;padding:16px;border-radius:11px;"
+              onclick="sp('orders');oo()">
+              <div style="font-size:26px;margin-bottom:7px;">📋</div>
+              <div style="font-size:12.5px;font-weight:600;">Buyurtma</div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ATTENDANCE -->
+    <div class="page" id="page-attendance">
+      <div class="card"
+        style="margin-bottom:22px;text-align:center;background:linear-gradient(135deg,var(--bg2),var(--bg3));">
+        <div class="clk" id="clk">00:00:00</div>
+        <div class="dd" id="att-d"></div>
+      </div>
+      <div class="g4" style="margin-bottom:22px;">
+        <div class="card sc">
+          <div class="lbl">Jami xodimlar</div>
+          <div class="val" style="color:var(--info)" id="at-t">0</div>
+          <div class="ib">👥</div>
+        </div>
+        <div class="card sc">
+          <div class="lbl">Kelganlar</div>
+          <div class="val up" id="at-c">0</div>
+          <div class="ib">✅</div>
+        </div>
+        <div class="card sc">
+          <div class="lbl">Kech kelganlar</div>
+          <div class="val" style="color:var(--warning)" id="at-l">0</div>
+          <div class="ib">⏰</div>
+        </div>
+        <div class="card sc">
+          <div class="lbl">Kelmaganlar</div>
+          <div class="val down" id="at-a">0</div>
+          <div class="ib">❌</div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="sh">
+            <div class="st">👷 Xodimlar davomati</div><button class="btn btn-s bsm" onclick="oam()">+ Davomat</button>
+          </div>
+          <div id="aw-list" style="display:flex;flex-direction:column;gap:9px;"></div>
+        </div>
+        <div class="card">
+          <div class="sh">
+            <div class="st">📅 Bugungi qaydlar</div>
+          </div>
+          <div id="att-log" style="max-height:380px;overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKERS -->
+    <div class="page" id="page-workers">
+      <div class="sh">
+        <div>
+          <div class="st">👥 Xodimlar</div>
+          <div class="ss" id="wc-cnt">0 xodim</div>
+        </div><button class="btn btn-p bsm" onclick="owm()">+ Xodim qo'shish</button>
+      </div>
+      <div class="g4" style="margin-bottom:22px;" id="w-stats"></div>
+      <div class="card">
+        <div class="sh">
+          <div class="st">Xodimlar ro'yxati</div>
+          <div class="si"><span class="sic">🔍</span><input class="sq" placeholder="Qidirish..."
+              oninput="fw(this.value)"></div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Xodim</th>
+                <th>Lavozim</th>
+                <th>Oylik</th>
+                <th>Telefon</th>
+                <th>Holat</th>
+                <th>Amallar</th>
+              </tr>
+            </thead>
+            <tbody id="w-tb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SALES -->
+    <div class="page" id="page-sales">
+      <div class="sh">
+        <div style="display:flex;align-items:center;gap:15px;">
+          <div class="st">💰 Savdo boshqaruvi</div>
+          <div class="tabs" style="margin-bottom:0; padding:3px; font-size:12px;">
+            <div class="tab active" onclick="fSW('all', this)">Umumiy</div>
+            <div class="tab" onclick="fSW('Xodim 1', this)">1-Xodimlar</div>
+            <div class="tab" onclick="fSW('Xodim 2', this)">2-Xodimlar</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:9px;"><input type="date" class="fi" id="s-df" style="width:auto;"
+            onchange="rST()"><button class="btn btn-s bsm" onclick="os()">+ Savdo qo'shish</button></div>
+      </div>
+      <div class="g4" style="margin-bottom:22px;">
+        <div class="card sc">
+          <div class="lbl">Bugun</div>
+          <div class="val up" id="s-t">0</div>
+          <div class="ib">📅</div>
+        </div>
+        <div class="card sc">
+          <div class="lbl">Bu hafta</div>
+          <div class="val up" id="s-w">0</div>
+          <div class="ib">📆</div>
+        </div>
+        <div class="card sc">
+          <div class="lbl">Bu oy</div>
+          <div class="val up" id="s-m">0</div>
+          <div class="ib">🗓</div>
+        </div>
+        <div class="card sc">
+          <div class="lbl">Jami savdolar</div>
+          <div class="val" id="s-cnt" style="color:var(--primary-light)">0</div>
+          <div class="ib">📊</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sh">
+          <div class="st">Savdo tarixi</div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Sana/Vaqt</th>
+                <th>Xizmat</th>
+                <th>Mijoz</th>
+                <th>Xodim</th>
+                <th>Summa</th>
+                <th>To'lov</th>
+                <th>Amallar</th>
+              </tr>
+            </thead>
+            <tbody id="s-tb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div class="page" id="page-expenses">
+      <div class="sh">
+        <div class="st">📤 Chiqimlar boshqaruvi</div><button class="btn btn-d bsm" onclick="oe()">+ Chiqim
+          qo'shish</button>
+      </div>
+      <div class="g4" style="margin-bottom:22px;">
+        <div class="card sc">
+          <div class="lbl">Bugun</div>
+          <div class="val down" id="e-t">0</div>
+          <div class="ib">📅</div>
+        </div>
+        <div class="card sc">
+          <div class="lbl">Bu hafta</div>
+          <div class="val down" id="e-w">0</div>
+          <div class="ib">📆</div>
+        </div>
+        <div class="card sc">
+          <div class="lbl">Bu oy</div>
+          <div class="val down" id="e-m">0</div>
+          <div class="ib">🗓</div>
+        </div>
+        <div class="card sc">
+          <div class="lbl">Eng ko'p kategoriya</div>
+          <div class="val" id="e-top" style="color:var(--danger);font-size:14px;">—</div>
+          <div class="ib">📊</div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="sh">
+            <div class="st">Kategoriyalar bo'yicha</div>
+          </div>
+          <div id="e-cats" style="display:flex;flex-direction:column;gap:9px;"></div>
+        </div>
+        <div class="card">
+          <div class="sh">
+            <div class="st">Chiqimlar tarixi</div>
+          </div>
+          <div class="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>Sana</th>
+                  <th>Kategoriya</th>
+                  <th>Izoh</th>
+                  <th>Summa</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="e-tb"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCE -->
+    <div class="page" id="page-finance">
+      <div class="sh">
+        <div class="st">📈 Moliyaviy hisobot</div>
+        <select class="fi" style="width:auto;" id="fp" onchange="rF()">
+          <option value="day">Bugun</option>
+          <option value="week">Bu hafta</option>
+          <option value="month" selected>Bu oy</option>
+          <option value="all">Barcha vaqt</option>
+        </select>
+      </div>
+      <div class="g3" style="margin-bottom:22px;">
+        <div class="card" style="border-color:rgba(16,185,129,.3);">
+          <div class="lbl" style="color:var(--success)">JAMI KIRIM</div>
+          <div class="val up" id="fi" style="font-size:28px;">0</div>
+        </div>
+        <div class="card" style="border-color:rgba(239,68,68,.3);">
+          <div class="lbl" style="color:var(--danger)">JAMI CHIQIM</div>
+          <div class="val down" id="fe" style="font-size:28px;">0</div>
+        </div>
+        <div class="card" style="border-color:rgba(108,63,232,.3);">
+          <div class="lbl" style="color:var(--primary-light)">SOF FOYDA</div>
+          <div class="val" id="fp2" style="font-size:28px;color:var(--primary-light);">0</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:22px;">
+        <div class="sh">
+          <div class="st">📊 Kirim/Chiqim grafigi</div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-end;height:170px;" id="fc"></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="st" style="margin-bottom:13px;">Xizmat turlari bo'yicha</div>
+          <div id="fsb"></div>
+        </div>
+        <div class="card">
+          <div class="st" style="margin-bottom:13px;">Xodimlar bo'yicha savdo</div>
+          <div id="fwb"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="page" id="page-orders">
+      <div class="sh">
+        <div class="st">📋 Buyurtmalar</div><button class="btn btn-p bsm" onclick="oo()">+ Buyurtma</button>
+      </div>
+      <div class="tabs" id="o-tabs">
+        <div class="tab active" onclick="fo('all',this)">Hammasi</div>
+        <div class="tab" onclick="fo('pending',this)">Kutilmoqda</div>
+        <div class="tab" onclick="fo('in-progress',this)">Jarayonda</div>
+        <div class="tab" onclick="fo('done',this)">Tugallangan</div>
+        <div class="tab" onclick="fo('cancelled',this)">Bekor</div>
+      </div>
+      <div class="card">
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Sana</th>
+                <th>Mijoz</th>
+                <th>Xizmat</th>
+                <th>Xodim</th>
+                <th>Summa</th>
+                <th>Holat</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="o-tb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SERVICES -->
+    <div class="page" id="page-services">
+      <div class="sh">
+        <div class="st">🎨 Xizmat turlari</div>
+        <div class="tabs">
+          <div class="tab active" onclick="fSv('all', this)">Barchasi</div>
+          <div class="tab" onclick="fSv('Xodim 1', this)">1-Xodim</div>
+          <div class="tab" onclick="fSv('Xodim 2', this)">2-Xodim</div>
+        </div>
+        <button class="btn btn-p bsm" onclick="osvm()">+ Xizmat qo'shish</button>
+      </div>
+      <div id="svc-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;"></div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="page" id="page-clients">
+      <div class="sh">
+        <div class="st">🙍 Mijozlar</div><button class="btn btn-p bsm" onclick="ocm()">+ Mijoz qo'shish</button>
+      </div>
+      <div class="card">
+        <div class="sh">
+          <div class="si"><span class="sic">🔍</span><input class="sq" placeholder="Mijoz qidirish..."
+              oninput="fc(this.value)"></div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Ismi</th>
+                <th>Telefon</th>
+                <th>Buyurtmalar</th>
+                <th>Jami summa</th>
+                <th>Oxirgi tashrif</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="cl-tb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="sh">
+        <div class="st">📑 Kunlik hisobot</div><input type="date" class="fi" id="r-d" style="width:auto;"
+          onchange="rR()">
+      </div>
+      <div class="g4" id="r-stats" style="margin-bottom:22px;"></div>
+      <div class="g2">
+        <div class="card">
+          <div class="st" style="margin-bottom:13px;">💰 Savdolar</div>
+          <div class="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>Vaqt</th>
+                  <th>Xizmat</th>
+                  <th>Mijoz</th>
+                  <th>Summa</th>
+                </tr>
+              </thead>
+              <tbody id="r-s"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="st" style="margin-bottom:13px;">📤 Chiqimlar</div>
+          <div class="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>Vaqt</th>
+                  <th>Kategoriya</th>
+                  <th>Izoh</th>
+                  <th>Summa</th>
+                </tr>
+              </thead>
+              <tbody id="r-e"></tbody>
+            </table>
+          </div>
+          <div class="div"></div>
+          <div class="st" style="margin-bottom:13px;">🕐 Davomat</div>
+          <div id="r-a"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="g2">
+        <div class="card">
+          <div class="st" style="margin-bottom:16px;">🏢 Kompaniya ma'lumotlari</div>
+          <div class="fg"><label class="fl">Kompaniya nomi</label><input class="fi" value="Bonu Photo"></div>
+          <div class="fg"><label class="fl">Telefon</label><input class="fi" value="+998 90 123 45 67"></div>
+          <div class="fg"><label class="fl">Manzil</label><input class="fi" value="Toshkent sh., Chilonzor tumani">
+          </div>
+          <div class="fg"><label class="fl">Ish boshlash</label><input class="fi" type="time" value="09:00"></div>
+          <div class="fg"><label class="fl">Ish tugash</label><input class="fi" type="time" value="18:00"></div>
+          <button class="btn btn-s" onclick="toast2('Sozlamalar saqlandi!')">💾 Saqlash</button>
+        </div>
+        <div class="card">
+          <div class="st" style="margin-bottom:16px;">📊 Tizim statistikasi</div>
+          <div id="set-stats" style="display:flex;flex-direction:column;gap:9px;"></div>
+          <div class="div"></div>
+          <div class="st" style="margin-bottom:13px;">🗑 Ma'lumotlarni tozalash</div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap;">
+            <button class="btn btn-d bsm" onclick="cd('sales')">Savdolarni o'ch</button>
+            <button class="btn btn-d bsm" onclick="cd('expenses')">Chiqimlarni o'ch</button>
+            <button class="btn btn-d bsm" onclick="cd('all')">Hammasini reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODALS -->
+  <div class="mo" id="modal-qa">
+    <div class="md" style="width:360px;">
+      <div class="mh">
+        <div class="mt">⚡ Tez qo'shish</div><button class="mc" onclick="cm('modal-qa')">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button class="card" style="cursor:pointer;text-align:center;padding:18px;"
+          onclick="cm('modal-qa');sp('sales');os()">
+          <div style="font-size:28px;margin-bottom:7px;">💰</div>
+          <div style="font-size:12.5px;font-weight:600;">Savdo</div>
+        </button>
+        <button class="card" style="cursor:pointer;text-align:center;padding:18px;"
+          onclick="cm('modal-qa');sp('expenses');oe()">
+          <div style="font-size:28px;margin-bottom:7px;">📤</div>
+          <div style="font-size:12.5px;font-weight:600;">Chiqim</div>
+        </button>
+        <button class="card" style="cursor:pointer;text-align:center;padding:18px;"
+          onclick="cm('modal-qa');sp('workers');owm()">
+          <div style="font-size:28px;margin-bottom:7px;">👤</div>
+          <div style="font-size:12.5px;font-weight:600;">Xodim</div>
+        </button>
+        <button class="card" style="cursor:pointer;text-align:center;padding:18px;"
+          onclick="cm('modal-qa');sp('orders');oo()">
+          <div style="font-size:28px;margin-bottom:7px;">📋</div>
+          <div style="font-size:12.5px;font-weight:600;">Buyurtma</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-sale">
+    <div class="md">
+      <div class="mh">
+        <div class="mt">💰 Yangi savdo</div><button class="mc" onclick="cm('modal-sale')">✕</button>
+      </div>
+      <div class="fg"><label class="fl">Xizmat turi</label><select class="fs" id="sl-svc"></select></div>
+      <div class="fg"><label class="fl">Mijoz ismi</label><input class="fi" id="sl-cl" placeholder="Mijoz ismi"></div>
+      <div class="fg"><label class="fl">Xodim</label><select class="fs" id="sl-wk"></select></div>
+      <div class="fg"><label class="fl">Summa (so'm)</label><input class="fi" type="text" id="sl-am" placeholder="0"
+          oninput="fMo(this)">
+      </div>
+      <div class="fg"><label class="fl">To'lov turi</label><select class="fs" id="sl-py">
+          <option>Naqd</option>
+          <option>Karta</option>
+          <option>Click</option>
+          <option>Payme</option>
+          <option>Qarz</option>
+        </select></div>
+      <div class="fg"><label class="fl">Izoh</label><textarea class="fta" id="sl-nt"
+          placeholder="Ixtiyoriy..."></textarea></div>
+      <div style="display:flex;gap:9px;"><button class="btn btn-s" style="flex:1;" onclick="aS()">✅
+          Qo'shish</button><button class="btn btn-o" onclick="cm('modal-sale')">Bekor</button></div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-exp">
+    <div class="md">
+      <div class="mh">
+        <div class="mt">📤 Yangi chiqim</div><button class="mc" onclick="cm('modal-exp')">✕</button>
+      </div>
+      <div class="fg"><label class="fl">Kategoriya</label><select class="fs" id="ex-cat">
+          <option>Ijara</option>
+          <option>Maosh</option>
+          <option>Jihozlar</option>
+          <option>Aloqa</option>
+          <option>Transport</option>
+          <option>Oziq-ovqat</option>
+          <option>Kommunal</option>
+          <option>Reklama</option>
+          <option>Boshqa</option>
+        </select></div>
+      <div class="fg"><label class="fl">Summa (so'm)</label><input class="fi" type="text" id="ex-am" placeholder="0"
+          oninput="fMo(this)">
+      </div>
+      <div class="fg"><label class="fl">Izoh</label><textarea class="fta" id="ex-nt"
+          placeholder="Nima uchun xarajat..."></textarea></div>
+      <div style="display:flex;gap:9px;"><button class="btn btn-d" style="flex:1;" onclick="aE()">📤
+          Qo'shish</button><button class="btn btn-o" onclick="cm('modal-exp')">Bekor</button></div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-wk">
+    <div class="md">
+      <div class="mh">
+        <div class="mt">👤 Yangi xodim</div><button class="mc" onclick="cm('modal-wk')">✕</button>
+      </div>
+      <div class="fg"><label class="fl">To'liq ismi</label><input class="fi" id="wm-n" placeholder="Ism Familya"></div>
+      <div class="fg"><label class="fl">Lavozim</label><select class="fs" id="wm-r">
+          <option>Fotograf</option>
+          <option>Videograf</option>
+          <option>Fotoredaktor</option>
+          <option>Videoredaktor</option>
+          <option>Administrator</option>
+          <option>Kassir</option>
+          <option>Kuryer</option>
+          <option>Boshqa</option>
+        </select></div>
+      <div class="fg"><label class="fl">Telefon</label><input class="fi" id="wm-p" placeholder="+998-90-000-00-00"
+          oninput="fPh(this)">
+      </div>
+      <div class="fg"><label class="fl">Oylik maosh (so'm)</label><input class="fi" type="text" id="wm-s"
+          placeholder="0" oninput="fMo(this)"></div>
+      <div class="fg"><label class="fl">Ishga kirgan sana</label><input class="fi" type="date" id="wm-d"></div>
+      <div style="display:flex;gap:9px;"><button class="btn btn-s" style="flex:1;" onclick="aW()">✅
+          Qo'shish</button><button class="btn btn-o" onclick="cm('modal-wk')">Bekor</button></div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-att">
+    <div class="md">
+      <div class="mh">
+        <div class="mt">🕐 Davomat belgilash</div><button class="mc" onclick="cm('modal-att')">✕</button>
+      </div>
+      <div class="fg"><label class="fl">Xodim</label><select class="fs" id="am-wk"></select></div>
+      <div class="fg"><label class="fl">Holat</label><select class="fs" id="am-st">
+          <option value="came">Keldi ✅</option>
+          <option value="late">Kech keldi ⏰</option>
+          <option value="absent">Kelmadi ❌</option>
+          <option value="sick">Kasal 🤒</option>
+          <option value="vacation">Ta'tilda 🏖</option>
+        </select></div>
+      <div class="fg"><label class="fl">Kelish vaqti</label><input class="fi" type="time" id="am-ti"></div>
+      <div class="fg"><label class="fl">Ketish vaqti</label><input class="fi" type="time" id="am-to" value="18:00">
+      </div>
+      <div class="fg"><label class="fl">Izoh</label><textarea class="fta" id="am-nt"
+          placeholder="Ixtiyoriy..."></textarea></div>
+      <div style="display:flex;gap:9px;"><button class="btn btn-s" style="flex:1;" onclick="aA()">✅
+          Saqlash</button><button class="btn btn-o" onclick="cm('modal-att')">Bekor</button></div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-ord">
+    <div class="md">
+      <div class="mh">
+        <div class="mt">📋 Yangi buyurtma</div><button class="mc" onclick="cm('modal-ord')">✕</button>
+      </div>
+      <div class="fg"><label class="fl">Mijoz ismi</label><input class="fi" id="om-cl" placeholder="Mijoz ismi"></div>
+      <div class="fg"><label class="fl">Mijoz telefoni</label><input class="fi" id="om-ph"
+          placeholder="+998-90-000-00-00" oninput="fPh(this)"></div>
+      <div class="fg"><label class="fl">Xizmat turi</label><select class="fs" id="om-sv"></select></div>
+      <div class="fg"><label class="fl">Mas'ul xodim</label><select class="fs" id="om-wk"></select></div>
+      <div class="fg"><label class="fl">Summa</label><input class="fi" type="text" id="om-am" placeholder="0"
+          oninput="fMo(this)"></div>
+      <div class="fg"><label class="fl">Holat</label><select class="fs" id="om-st">
+          <option value="pending">Kutilmoqda</option>
+          <option value="in-progress">Jarayonda</option>
+          <option value="done">Tugallangan</option>
+        </select></div>
+      <div class="fg"><label class="fl">Izoh</label><textarea class="fta" id="om-nt"
+          placeholder="Buyurtma haqida..."></textarea></div>
+      <div style="display:flex;gap:9px;"><button class="btn btn-s" style="flex:1;" onclick="aO()">✅
+          Saqlash</button><button class="btn btn-o" onclick="cm('modal-ord')">Bekor</button></div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-svc">
+    <div class="md">
+      <div class="mh">
+        <div class="mt">🎨 Xizmat qo'shish</div><button class="mc" onclick="cm('modal-svc')">✕</button>
+      </div>
+      <div class="fg"><label class="fl">Xizmat nomi</label><input class="fi" id="sv-n" placeholder="Xizmat nomi"></div>
+      <div class="fg"><label class="fl">Emoji</label><input class="fi" id="sv-e" placeholder="📷" maxlength="2"></div>
+      <div class="fg"><label class="fl">Narx (so'm)</label><input class="fi" type="text" id="sv-p" placeholder="0"
+          oninput="fMo(this)">
+      </div>
+      <div class="fg"><label class="fl">Tavsif (Kategoriya)</label><select class="fi" id="sv-d">
+          <option value="hujjat">Hujjat rasm</option>
+          <option value="print">Rasm chiqarish</option>
+          <option value="ofis">Kserokopiya & Ofis</option>
+          <option value="design">Dizayn & Montaj</option>
+          <option value="frame">Ramkalar</option>
+          <option value="other">Boshqa</option>
+        </select></div>
+      <div class="fg"><label class="fl">Xodim</label><select class="fi" id="sv-wk">
+          <option value="Xodim 1">Xodim 1</option>
+          <option value="Xodim 2">Xodim 2</option>
+        </select></div>
+      <div style="display:flex;gap:9px;"><button class="btn btn-p" style="flex:1;" onclick="aSvc()">✅
+          Qo'shish</button><button class="btn btn-o" onclick="cm('modal-svc')">Bekor</button></div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-cl">
+    <div class="md">
+      <div class="mh">
+        <div class="mt">🙍 Yangi mijoz</div><button class="mc" onclick="cm('modal-cl')">✕</button>
+      </div>
+      <div class="fg"><label class="fl">To'liq ismi</label><input class="fi" id="cl-n" placeholder="Ism Familya"></div>
+      <div class="fg"><label class="fl">Telefon</label><input class="fi" id="cl-p" placeholder="+998-90-000-00-00"
+          oninput="fPh(this)">
+      </div>
+      <div class="fg"><label class="fl">Manzil</label><input class="fi" id="cl-a" placeholder="Shahar, tuman"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="fg"><label class="fl">Buyurtmalar soni</label><input class="fi" type="number" id="cl-oc"
+            placeholder="0"></div>
+        <div class="fg"><label class="fl">Jami summa</label><input class="fi" type="text" id="cl-ts" placeholder="0"
+            oninput="fMo(this)">
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Izoh</label><textarea class="fta" id="cl-x"
+          placeholder="Mijoz haqida..."></textarea></div>
+      <div style="display:flex;gap:9px;"><button class="btn btn-p" style="flex:1;" onclick="aCl()">✅
+          Saqlash</button><button class="btn btn-o" onclick="cm('modal-cl')">Bekor</button></div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-order-view">
+    <div class="md">
+      <div class="mh">
+        <div class="mt">🔍 Buyurtma tafsilotlari</div><button class="mc" onclick="cm('modal-order-view')">✕</button>
+      </div>
+      <div id="order-view-content" style="padding:15px 0;">
+        <!-- Content will be loaded here -->
+      </div>
+      <div style="display:flex;gap:9px;margin-top:15px;">
+        <button class="btn btn-o" style="flex:1;" onclick="cm('modal-order-view')">Yopish</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast-el"></div>
+
+  <script>
+    const API_URL = 'http://localhost:3050/api';
+    const D = {
+      async g(k) {
+        try {
+          const res = await fetch(`${API_URL}/${k}`);
+          return await res.json();
+        } catch (e) {
+          console.error('API Error:', e);
+          return [];
+        }
+      },
+      async s(k, v) {
+        try {
+          await fetch(`${API_URL}/${k}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(v)
+          });
+        } catch (e) {
+          console.error('API Error:', e);
+        }
+      },
+      go(k, d) { try { return JSON.parse(localStorage.getItem('bp_' + k)) || d } catch { return d } },
+      so(k, v) { localStorage.setItem('bp_' + k, JSON.stringify(v)) }
+    };
+    function fPh(el) {
+      let v = el.value.replace(/\D/g, '');
+      if (v.startsWith('998')) v = v.substring(3);
+      if (v.length > 9) v = v.substring(0, 9);
+      let res = '+998';
+      if (v.length > 0) res += '-' + v.substring(0, 2);
+      if (v.length > 2) res += '-' + v.substring(2, 5);
+      if (v.length > 5) res += '-' + v.substring(5, 7);
+      if (v.length > 7) res += '-' + v.substring(7, 9);
+      el.value = res;
+    }
+    function fMo(el) {
+      let v = el.value.replace(/\D/g, '');
+      el.value = v.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    }
+    const gV = id => {
+      const el = document.getElementById(id);
+      if (!el) return 0;
+      return parseInt(el.value.replace(/\s/g, '')) || 0;
+    };
+    const fmt = n => n ? String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so'm" : "0 so'm";
+    const td = () => new Date().toISOString().split('T')[0];
+    function toast2(msg, t = 's') { const el = document.getElementById('toast-el'); el.textContent = (t === 's' ? '✅ ' : t === 'e' ? '❌ ' : 'ℹ️ ') + msg; el.style.borderLeft = '3px solid ' + (t === 's' ? 'var(--success)' : t === 'e' ? 'var(--danger)' : 'var(--primary)'); el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
+    function cm(id) { document.getElementById(id).classList.remove('open') }
+    function om(id) { document.getElementById(id).classList.add('open') }
+    document.querySelectorAll('.mo').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open') }));
+
+    const ptitles = { dashboard: '📊 Bosh sahifa', attendance: '🕐 Davomat', workers: '👥 Xodimlar', sales: '💰 Savdo', expenses: '📤 Chiqimlar', finance: '📈 Moliya hisoboti', orders: '📋 Buyurtmalar', services: '🎨 Xizmat turlari', clients: '🙍 Mijozlar', reports: '📑 Kunlik hisobot', settings: '⚙️ Sozlamalar' };
+    async function sp(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.ni').forEach(n => n.classList.remove('active')); document.getElementById('page-' + id).classList.add('active'); document.querySelectorAll('.ni').forEach(n => { if (n.onclick && n.onclick.toString().includes("'" + id + "'")) n.classList.add('active') }); document.getElementById('pt').textContent = ptitles[id] || id; await rP(id) }
+    async function spSv(w) {
+      await sp('services');
+      const tabs = document.querySelectorAll('#page-services .tab');
+      const target = Array.from(tabs).find(t => t.textContent.includes(w === 'Xodim 1' ? '1-Xodim' : '2-Xodim'));
+      if (target) fSv(w, target);
+    }
+    async function rP(id) { const f = { dashboard: rD, attendance: rAtt, workers: rWk, sales: rS, expenses: rEx, finance: rF, orders: rOrd, services: rSvc, clients: rCl, reports: rR, settings: rSet }; if (f[id]) await f[id]() }
+
+    async function seed() {
+      // Seed is now handled by the server (db.js)
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const el = document.getElementById('clk'); if (el) el.textContent = now.toLocaleTimeString('uz-UZ');
+      const days = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
+      const months = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
+      const ad = document.getElementById('att-d'); if (ad) ad.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+      const tdd = document.getElementById('td'); if (tdd) tdd.textContent = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    async function rD() {
+      const today = td();
+      const sales = await D.g('sales');
+      const exp = await D.g('expenses');
+      const att = await D.g('attendance');
+      const wks = await D.g('workers');
+
+      const ts = sales.filter(s => (s.date === today || s.created_at?.startsWith(today))).reduce((a, b) => a + (b.amount || b.total_amount), 0);
+      const te = exp.filter(e => (e.date === today || e.created_at?.startsWith(today))).reduce((a, b) => a + b.amount, 0);
+      const pr = ts - te;
+
+      document.getElementById('d-s').textContent = fmt(ts);
+      document.getElementById('d-e').textContent = fmt(te);
+      document.getElementById('d-p').textContent = fmt(pr);
+      document.getElementById('d-p').className = 'val ' + (pr >= 0 ? 'up' : 'down');
+      document.getElementById('d-pc').innerHTML = pr >= 0 ? '<span class="up">↑ Ijobiy natija</span>' : '<span class="down">↓ Zarar</span>';
+
+      const ta = att.filter(a => a.date === today);
+      const lc = ta.filter(a => a.status === 'late').length;
+      const cc = ta.filter(a => a.status === 'came' || a.status === 'late').length;
+
+      document.getElementById('d-w').textContent = cc + '/' + wks.length;
+      document.getElementById('d-l').textContent = lc;
+      document.getElementById('lb').textContent = lc;
+
+      const cEl = document.getElementById('wc'); cEl.innerHTML = '';
+      const days7 = []; for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days7.push({ date: d.toISOString().split('T')[0], label: ['Ya', 'Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh'][d.getDay()] }) }
+
+      const mx = Math.max(...days7.map(d => sales.filter(s => (s.date === d.date || s.created_at?.startsWith(d.date))).reduce((a, b) => a + (b.amount || b.total_amount), 0)), 1);
+
+      days7.forEach(d => {
+        const amt = sales.filter(s => (s.date === d.date || s.created_at?.startsWith(d.date))).reduce((a, b) => a + (b.amount || b.total_amount), 0);
+        const h = Math.max(8, Math.round((amt / mx) * 130));
+        const it = d.date === today;
+        const col = document.createElement('div');
+        col.className = 'bcol';
+        col.innerHTML = `<div class="bar" style="height:${h}px;background:${it ? 'linear-gradient(180deg,var(--primary-light),var(--primary))' : 'linear-gradient(180deg,rgba(108,63,232,.5),rgba(108,63,232,.2))'}" data-v="${fmt(amt)}"></div><div class="bl">${d.label}</div>`;
+        cEl.appendChild(col)
+      });
+
+      const sMap = { came: { icon: '✅', cls: 'pg', dot: 'dg', t: 'Keldi' }, late: { icon: '⏰', cls: 'py', dot: 'dy', t: 'Kech' }, absent: { icon: '❌', cls: 'pr', dot: 'dr', t: 'Kelmadi' }, sick: { icon: '🤒', cls: 'pr', dot: 'dr', t: 'Kasal' }, vacation: { icon: '🏖', cls: 'pb', dot: 'dy', t: "Ta'til" } };
+      const al = document.getElementById('d-al'); al.innerHTML = '';
+      ta.slice(0, 4).forEach(a => {
+        const s = sMap[a.status] || sMap.came;
+        const w = wks.find(x => x.id === a.workerId);
+        al.innerHTML += `<div class="wc"><div class="wa" style="background:${w?.color || 'var(--primary)'}">${(w?.name || '?')[0]}</div><div class="wi"><div class="wn">${a.workerName}</div><div class="ws"><span class="dot ${s.dot}"></span>${a.timeIn || '—'}</div></div><span class="pill ${s.cls}">${s.icon} ${s.t}</span></div>`
+      });
+
+      if (!ta.length) al.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:16px;">Bugun davomat belgilanmagan</div>';
+      document.getElementById('a-sub').textContent = `${cc} / ${wks.length} xodim`;
+
+      const ords_raw = await D.g('orders');
+      const stC = { pending: 'py', done: 'pg', 'in-progress': 'pb', cancelled: 'pr' };
+      const stT = { pending: 'Kutilmoqda', done: 'Tugallandi', 'in-progress': 'Jarayonda', cancelled: 'Bekor' };
+
+      document.getElementById('d-ot').innerHTML = ords_raw.slice(-5).reverse().map(o => `<tr><td><strong>${o.client_name || 'Noma\'lum'}</strong></td><td>Xizmat #${o.id}</td><td><strong>${fmt(o.total_amount)}</strong></td><td><span class="pill ${stC[o.status] || 'pb'}">${stT[o.status] || o.status}</span></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);">Buyurtmalar yo\'q</td></tr>';
+    }
+
+    async function rAtt() {
+      const wks = await D.g('workers'); const att = await D.g('attendance'); const today = td(); const ta = att.filter(a => a.date === today);
+      document.getElementById('at-t').textContent = wks.length;
+      document.getElementById('at-c').textContent = ta.filter(a => a.status === 'came' || a.status === 'late').length;
+      document.getElementById('at-l').textContent = ta.filter(a => a.status === 'late').length;
+      document.getElementById('at-a').textContent = ta.filter(a => a.status === 'absent' || a.status === 'sick').length;
+      const sMap = { came: { icon: '✅', cls: 'pg', dot: 'dg', t: 'Keldi' }, late: { icon: '⏰', cls: 'py', dot: 'dy', t: 'Kech keldi' }, absent: { icon: '❌', cls: 'pr', dot: 'dr', t: 'Kelmadi' }, sick: { icon: '🤒', cls: 'pr', dot: 'dr', t: 'Kasal' }, vacation: { icon: '🏖', cls: 'pb', dot: 'dy', t: "Ta'tilda" } };
+      document.getElementById('aw-list').innerHTML = wks.map(w => { const a = ta.find(x => x.workerId === w.id); const s = a ? sMap[a.status] || sMap.came : null; return `<div class="wc"><div class="wa" style="background:${w.color}">${w.name[0]}</div><div class="wi"><div class="wn">${w.name}</div><div class="wr">${w.role}</div>${a ? `<div class="ws"><span class="dot ${s.dot}"></span>${a.timeIn || '—'} ${a.timeOut ? '→ ' + a.timeOut : ''}</div>` : ''}</div>${a ? `<span class="pill ${s.cls}">${s.icon} ${s.t}</span>` : '<span class="pill pr">❓ Belgilanmagan</span>'}<button class="bi" onclick="oam2(${w.id})">✏️</button></div>` }).join('');
+      const log = document.getElementById('att-log'); const al = ta.slice().reverse(); log.innerHTML = al.length ? `<div class="tl">${al.map(a => { const s = sMap[a.status] || sMap.came; return `<div class="tli"><div class="tld" style="background:${a.status === 'came' ? 'var(--success)' : a.status === 'late' ? 'var(--warning)' : 'var(--danger)'}"></div><div class="tlt">${a.timeIn || '—'}</div><div class="tlx"><strong>${a.workerName}</strong> — ${s.icon} ${s.t}</div></div>` }).join('')}</div>` : '<div style="color:var(--text3);font-size:13px;text-align:center;padding:16px;">Bugun hali davomat yo\'q</div>';
+    }
+
+    async function oam() {
+      const wks = await D.g('workers'); const sel = document.getElementById('am-wk'); sel.innerHTML = wks.map(w => `<option value="${w.id}">${w.name} — ${w.role}</option>`).join('');
+      const now = new Date(); document.getElementById('am-ti').value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; document.getElementById('am-nt').value = ''; om('modal-att');
+    }
+    async function oam2(wid) { await oam(); document.getElementById('am-wk').value = wid; }
+    async function aA() {
+      const wid = parseInt(document.getElementById('am-wk').value);
+      const wks = await D.g('workers'); const w = wks.find(x => x.id === wid); if (!w) return;
+      const rec = {
+        workerId: wid,
+        workerName: w.name,
+        status: document.getElementById('am-st').value,
+        timeIn: document.getElementById('am-ti').value,
+        timeOut: document.getElementById('am-to').value,
+        date: td(),
+        note: document.getElementById('am-nt').value
+      };
+      await D.s('attendance', rec); cm('modal-att'); await rAtt(); toast2('Davomat saqlandi!');
+    }
+
+    async function rWk() {
+      const wks = await D.g('workers');
+      const sals = await D.g('salaries');
+      document.getElementById('wc-cnt').textContent = wks.length + ' xodim';
+      const roles = {}; wks.forEach(w => { roles[w.role] = (roles[w.role] || 0) + 1 });
+      document.getElementById('w-stats').innerHTML = Object.entries(roles).slice(0, 4).map(([r, c]) => `<div class="card sc"><div class="lbl">${r}</div><div class="val" style="color:var(--primary-light)">${c}</div><div class="ib">👤</div></div>`).join('');
+      rWT(wks, sals);
+    }
+    function rWT(wks, sals = []) {
+      const curMonth = new Date().toISOString().slice(0, 7);
+      document.getElementById('w-tb').innerHTML = wks.map((w, i) => {
+        const isPaid = sals.some(s => s.worker_id === w.id && s.month === curMonth);
+        const actionBtn = isPaid
+          ? `<span style="color:var(--success);font-size:12px;font-weight:700;">✅ Oylik berildi</span>`
+          : `<button class="btn btn-s bsm" style="padding:4px 8px;font-size:11px;" onclick="pW(${w.id}, '${w.name}', ${w.salary})">💸 Oylik</button>`;
+
+        return `<tr><td>${i + 1}</td><td><div style="display:flex;align-items:center;gap:9px;"><div class="wa" style="width:32px;height:32px;font-size:13px;background:var(--bg3)">${w.name[0]}</div><strong>${w.name}</strong></div></td><td><span class="pill pp">${w.role}</span></td><td><strong>${fmt(w.salary)}</strong></td><td>${w.phone || '—'}</td><td><span class="pill pg">Aktiv</span></td><td><div style="display:flex;align-items:center;gap:5px;">${actionBtn}<button class="bi" onclick="dW(${w.id})">🗑</button></div></td></tr>`;
+      }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text3);">Xodimlar yo\'q</td></tr>'
+    }
+    async function pW(id, name, salary) {
+      if (!confirm(`${name}ga ${fmt(salary)} oylik berilganini tasdiqlaysizmi?`)) return;
+      const curMonth = new Date().toISOString().slice(0, 7);
+      const rec = { worker_id: id, worker_name: name, amount: salary, month: curMonth };
+      
+      const res = await fetch(`${API_URL}/salaries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rec)
+      });
+      
+      if (res.ok) {
+        toast2(`${name}ga oylik berildi va chiqimlarga qo'shildi!`);
+        await rWk();
+        if (document.getElementById('page-expenses').classList.contains('active')) rEx();
+        if (document.getElementById('page-dashboard').classList.contains('active')) rD();
+      } else {
+        toast2('Xatolik yuz berdi!', 'e');
+      }
+    }
+    async function fw(q) { const wks = await D.g('workers'); rWT(wks.filter(w => w.name.toLowerCase().includes(q.toLowerCase()) || w.role.toLowerCase().includes(q.toLowerCase()))) }
+    function owm() { ['wm-n', 'wm-p', 'wm-s'].forEach(id => document.getElementById(id).value = ''); document.getElementById('wm-d').value = td(); om('modal-wk') }
+    async function aW() {
+      const n = document.getElementById('wm-n').value.trim(); if (!n) { toast2('Ism kiriting!', 'e'); return }
+      const role = document.getElementById('wm-r').value;
+      const phone = document.getElementById('wm-p').value;
+      const salary = gV('wm-s');
+      await fetch(`${API_URL}/workers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: n, role, phone, salary })
+      });
+      cm('modal-wk'); await rWk(); toast2(n + ' qo\'shildi!');
+    }
+    function dW(id) { if (!confirm('Xodimni o\'chirishni tasdiqlaysizmi?')) return; D.s('workers', D.g('workers').filter(w => w.id !== id)); rWk(); toast2('Xodim o\'chirildi', 'e') }
+
+    async function pSel() {
+      const svcs = await D.g('services'); const wks = await D.g('workers');
+      ['sl-svc', 'om-sv'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = svcs.map(s => `<option>${s.name}</option>`).join('') });
+      ['sl-wk', 'om-wk', 'am-wk'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = wks.map(w => `<option value="${w.id}">${w.name}</option>`).join('') });
+    }
+    let sWF = 'all';
+    function fSW(w, el) {
+      sWF = w;
+      document.querySelectorAll('#page-sales .tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      rS();
+    }
+
+    async function rS() {
+      const today = td(); document.getElementById('s-df').value = today;
+      let sales = await D.g('sales');
+      if (sWF !== 'all') sales = sales.filter(s => s.worker_name === sWF || s.worker === sWF);
+
+      const wa = new Date(); wa.setDate(wa.getDate() - 7); const ma = new Date(); ma.setMonth(ma.getMonth() - 1);
+      document.getElementById('s-t').textContent = fmt(sales.filter(s => s.date === today || s.created_at?.startsWith(today)).reduce((a, b) => a + (b.amount || b.total_amount), 0));
+      document.getElementById('s-w').textContent = fmt(sales.filter(s => new Date(s.date || s.created_at) >= wa).reduce((a, b) => a + (b.amount || b.total_amount), 0));
+      document.getElementById('s-m').textContent = fmt(sales.filter(s => new Date(s.date || s.created_at) >= ma).reduce((a, b) => a + (b.amount || b.total_amount), 0));
+      document.getElementById('s-cnt').textContent = sales.length + ' ta'; rST(); pSel();
+    }
+    async function rST() {
+      const df = document.getElementById('s-df')?.value;
+      let sl = await D.g('sales');
+      if (sWF !== 'all') sl = sl.filter(s => s.worker_name === sWF || s.worker === sWF);
+      if (df) sl = sl.filter(s => (s.date === df || s.created_at?.startsWith(df)));
+      document.getElementById('s-tb').innerHTML = sl.map((s, i) => {
+        const ts = s.created_at || '';
+        const datePart = s.date || ts.split(' ')[0] || ts.split('T')[0] || '—';
+        const timePart = s.time || ts.split(' ')[1]?.slice(0, 5) || ts.split('T')[1]?.slice(0, 5) || '—';
+        const serviceText = s.service || s.service_name || 'Buyurtma';
+        const pm = s.payment_method || s.payment || 'Karta';
+        const pCl = pm === 'Naqd' ? 'pg' : 'pb';
+        return `<tr><td>${i + 1}</td><td>${datePart} ${timePart}</td><td><button class="btn btn-s bsm" style="padding:4px 8px;font-size:11px;" onclick="vO(${s.id}, '${serviceText}')">👁 Ko'rish</button></td><td>${s.client || s.client_name}</td><td>${s.worker_name || s.worker || '—'}</td><td><strong style="color:var(--success)">${fmt(s.amount || s.total_amount)}</strong></td><td><span class="pill ${pCl}">${pm}</span></td><td><button class="bi" onclick="dSl(${s.id})">🗑</button></td></tr>`;
+      }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text3);">Savdolar yo\'q</td></tr>';
+    }
+    function os() { pSel();['sl-cl', 'sl-am', 'sl-nt'].forEach(id => document.getElementById(id).value = ''); om('modal-sale') }
+    async function aS() {
+      const am = gV('sl-am'); if (!am) { toast2('Summa kiriting!', 'e'); return }
+      const wEl = document.getElementById('sl-wk');
+      const rec = {
+        date: td(),
+        service: document.getElementById('sl-svc').value,
+        client: document.getElementById('sl-cl').value || "Noma'lum",
+        worker: wEl.options[wEl.selectedIndex]?.text || '—',
+        amount: am,
+        payment: document.getElementById('sl-py').value,
+        note: document.getElementById('sl-nt').value
+      };
+      await D.s('sales', rec); cm('modal-sale'); await rS(); await rD(); toast2(fmt(am) + ' savdo qo\'shildi!');
+    }
+    async function dSl(id) { if (!confirm('O\'chirishni tasdiqlaysizmi?')) return; await fetch(`${API_URL}/orders/${id}`, { method: 'DELETE' }); await rST(); toast2('Savdo o\'chirildi', 'e') }
+
+    async function rEx() {
+      const today = td();
+      let expRaw = await D.g('expenses');
+      const exp = expRaw.map(e => {
+        const ts = e.created_at || '';
+        const d = e.date || ts.split(' ')[0] || ts.split('T')[0] || '—';
+        const t = e.time || ts.split(' ')[1]?.slice(0, 5) || ts.split('T')[1]?.slice(0, 5) || '';
+        return { ...e, date: d, time: t };
+      });
+
+      const wa = new Date(); wa.setDate(wa.getDate() - 7);
+      const ma = new Date(); ma.setMonth(ma.getMonth() - 1);
+
+      document.getElementById('e-t').textContent = fmt(exp.filter(e => e.date === today).reduce((a, b) => a + b.amount, 0));
+      document.getElementById('e-w').textContent = fmt(exp.filter(e => new Date(e.date) >= wa).reduce((a, b) => a + b.amount, 0));
+      document.getElementById('e-m').textContent = fmt(exp.filter(e => new Date(e.date) >= ma).reduce((a, b) => a + b.amount, 0));
+
+      const cats = {}; exp.forEach(e => { cats[e.category] = (cats[e.category] || 0) + e.amount });
+      const top = Object.entries(cats).sort((a, b) => b[1] - a[1])[0];
+      document.getElementById('e-top').textContent = top ? top[0] : '—';
+
+      const total = Object.values(cats).reduce((a, b) => a + b, 0) || 1;
+      const cc = ['#6C3FE8', '#EC4899', '#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316'];
+      document.getElementById('e-cats').innerHTML = Object.entries(cats).sort((a, b) => b[1] - a[1]).map(([c, v], i) => `<div><div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12.5px;"><span style="color:var(--text2)">${c}</span><strong>${fmt(v)}</strong></div><div class="pb-wrap"><div class="pb-fill" style="width:${(v / total * 100).toFixed(1)}%;background:${cc[i % cc.length]}"></div></div></div>`).join('');
+
+      document.getElementById('e-tb').innerHTML = exp.slice().reverse().map(e => `<tr><td>${e.date} ${e.time}</td><td><span class="pill pr">${e.category}</span></td><td>${e.note || '—'}</td><td><strong style="color:var(--danger)">${fmt(e.amount)}</strong></td><td><button class="bi" onclick="dEx(${e.id})">🗑</button></td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);">Chiqimlar yo\'q</td></tr>';
+    }
+    function oe() { ['ex-am', 'ex-nt'].forEach(id => document.getElementById(id).value = ''); om('modal-exp') }
+    async function aE() {
+      const am = gV('ex-am'); if (!am) { toast2('Summa kiriting!', 'e'); return }
+      const rec = {
+        date: td(),
+        category: document.getElementById('ex-cat').value,
+        amount: am,
+        note: document.getElementById('ex-nt').value
+      };
+      await D.s('expenses', rec); cm('modal-exp'); await rEx(); await rD(); toast2(fmt(am) + ' chiqim qo\'shildi!');
+    }
+    async function dEx(id) { if (!confirm('O\'chirishni tasdiqlaysizmi?')) return; await fetch(`${API_URL}/expenses/${id}`, { method: 'DELETE' }); await rEx(); toast2('Chiqim o\'chirildi', 'e') }
+
+    async function rF() {
+      const period = document.getElementById('fp')?.value || 'month';
+      const sales = await D.g('sales'); const exp = await D.g('expenses');
+      let ff; if (period === 'day') ff = d => d === td(); else if (period === 'week') { const w = new Date(); w.setDate(w.getDate() - 7); ff = d => new Date(d) >= w } else if (period === 'month') { const m = new Date(); m.setMonth(m.getMonth() - 1); ff = d => new Date(d) >= m } else ff = () => true;
+      const fs = sales.filter(s => ff(s.date || s.created_at));
+      const fe = exp.filter(e => ff(e.date || e.created_at));
+      const inc = fs.reduce((a, b) => a + (b.amount || b.total_amount), 0);
+      const ex = fe.reduce((a, b) => a + b.amount, 0); const pr = inc - ex;
+      document.getElementById('fi').textContent = fmt(inc); document.getElementById('fe').textContent = fmt(ex); document.getElementById('fp2').textContent = fmt(pr); document.getElementById('fp2').className = 'val ' + (pr >= 0 ? 'up' : 'down');
+      const fc = document.getElementById('fc'); fc.innerHTML = ''; const days7 = []; for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days7.push(d.toISOString().split('T')[0]) }
+      const mx = Math.max(...days7.map(d => Math.max(sales.filter(s => (s.date === d || s.created_at?.startsWith(d))).reduce((a, b) => a + (b.amount || b.total_amount), 0), exp.filter(e => e.date === d).reduce((a, b) => a + b.amount, 0))), 1);
+      const dnames = ['Ya', 'Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh'];
+      days7.forEach(d => { const dd = new Date(d); const sv = sales.filter(x => (x.date === d || x.created_at?.startsWith(d))).reduce((a, b) => a + (b.amount || b.total_amount), 0); const ex = exp.filter(x => x.date === d).reduce((a, b) => a + b.amount, 0); const hs = Math.max(6, Math.round((sv / mx) * 150)); const he = Math.max(6, Math.round((ex / mx) * 150)); fc.innerHTML += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="display:flex;align-items:flex-end;gap:3px;height:158px;"><div style="width:14px;border-radius:4px 4px 0 0;height:${hs}px;background:linear-gradient(180deg,var(--success),rgba(16,185,129,.3))" title="${fmt(sv)}"></div><div style="width:14px;border-radius:4px 4px 0 0;height:${he}px;background:linear-gradient(180deg,var(--danger),rgba(239,68,68,.3))" title="${fmt(ex)}"></div></div><div style="font-size:10px;color:var(--text3)">${dnames[dd.getDay()]}</div></div>` });
+      fc.innerHTML += `<div style="display:flex;gap:14px;align-self:flex-end;padding:0 0 18px 18px;font-size:11.5px;color:var(--text3);"><span>🟢 Kirim</span><span>🔴 Chiqim</span></div>`;
+      const tot = inc || 1; const sb = {}; fs.forEach(s => { const name = s.service || 'Buyurtma'; sb[name] = (sb[name] || 0) + (s.amount || s.total_amount) });
+      const wb = {}; fs.forEach(s => { const name = s.worker || s.worker_name || '—'; wb[name] = (wb[name] || 0) + (s.amount || s.total_amount) });
+      document.getElementById('fsb').innerHTML = Object.entries(sb).sort((a, b) => b[1] - a[1]).map(([s, v]) => `<div style="margin-bottom:11px;"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;"><span style="color:var(--text2)">${s}</span><span style="color:var(--success)">${fmt(v)}</span></div><div class="pb-wrap"><div class="pb-fill" style="width:${(v / tot * 100).toFixed(1)}%;background:var(--primary)"></div></div></div>`).join('') || '<div style="color:var(--text3);font-size:13px;">Ma\'lumot yo\'q</div>';
+      document.getElementById('fwb').innerHTML = Object.entries(wb).sort((a, b) => b[1] - a[1]).map(([w, v]) => `<div style="margin-bottom:11px;"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;"><span style="color:var(--text2)">${w}</span><span style="color:var(--success)">${fmt(v)}</span></div><div class="pb-wrap"><div class="pb-fill" style="width:${(v / tot * 100).toFixed(1)}%;background:var(--warning)"></div></div></div>`).join('') || '<div style="color:var(--text3);font-size:13px;">Ma\'lumot yo\'q</div>';
+    }
+
+    let oF = 'all';
+    async function vO(id, title) {
+      const content = document.getElementById('order-view-content');
+      content.innerHTML = '<div style="text-align:center;padding:40px;"><div class="spinner"></div><div style="margin-top:12px;color:var(--text3);font-size:13px;">Yuklanmoqda...</div></div>';
+      om('modal-order-view');
+
+      try {
+        const res = await fetch(`${API_URL}/orders/${id}/items`);
+        const items = await res.json();
+
+        let html = '';
+        if (!items || items.length === 0) {
+          html = `<div style="background:linear-gradient(135deg, rgba(108,63,232,0.1), rgba(108,63,232,0.05)); border:1px solid rgba(108,63,232,0.2); border-radius:12px; padding:15px; margin-bottom:15px; text-align:center;">
+            <div style="font-size:12px; color:var(--text3); margin-bottom:6px;">Xizmat turi</div>
+            <div style="font-size:17px; font-weight:700; color:var(--primary-light); text-shadow: 0 0 15px rgba(108,63,232,0.3);">${title}</div>
+          </div>
+          <div style="text-align:center; padding:25px; color:var(--text3); font-size:13px; background:var(--bg3); border-radius:12px; border:1px dashed var(--border);">
+             <div style="font-size:28px; margin-bottom:10px;">📄</div>
+             Tezkor savdo: Alohida mahsulotlar ro'yxati mavjud emas.
+          </div>`;
+        } else {
+          html = `<div style="background:linear-gradient(135deg, rgba(108,63,232,0.15), rgba(108,63,232,0.05)); border:1px solid rgba(108,63,232,0.2); border-radius:12px; padding:15px; margin-bottom:15px;">
+            <div style="font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Asosiy ma'lumot</div>
+            <div style="font-size:17px; font-weight:800; color:#fff; margin-bottom:4px;">${title}</div>
+            <div style="font-size:12px; color:var(--primary-light); font-weight:500;">Buyurtma #${id}</div>
+          </div>
+          
+          <div style="font-size:13px; font-weight:600; color:var(--text2); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+            <span style="width:4px; height:14px; background:var(--primary); border-radius:2px;"></span> Mahsulotlar ro'yxati
+          </div>
+          
+          <div style="background:var(--bg3); border-radius:14px; overflow:hidden; border:1px solid var(--border);">
+            <table style="width:100%; border-collapse:collapse; font-size:13.5px;">
+              <thead>
+                <tr style="background:rgba(255,255,255,0.03); text-align:left;">
+                  <th style="padding:10px 12px; color:var(--text3); font-weight:500; border-bottom:1px solid var(--border);">Xizmat nomi</th>
+                  <th style="padding:10px 12px; color:var(--text3); font-weight:500; border-bottom:1px solid var(--border); text-align:center;">Soni</th>
+                  <th style="padding:10px 12px; color:var(--text3); font-weight:500; border-bottom:1px solid var(--border); text-align:right;">Jami</th>
+                </tr>
+              </thead>
+              <tbody>`;
+
+          items.forEach((item, idx) => {
+            html += `<tr style="${idx === items.length - 1 ? '' : 'border-bottom:1px solid var(--border)'}">
+              <td style="padding:10px 12px; color:var(--text); font-weight:500;">${item.service_name}</td>
+              <td style="padding:10px 12px; color:var(--text2); text-align:center;"><span style="background:var(--bg2); padding:2px 8px; border-radius:6px; font-size:12px;">${item.quantity} ta</span></td>
+              <td style="padding:10px 12px; color:var(--success); font-weight:700; text-align:right;">${fmt(item.price * item.quantity)}</td>
+            </tr>`;
+          });
+
+          const total = items.reduce((a, b) => a + (b.price * b.quantity), 0);
+          html += `</tbody>
+            <tfoot>
+              <tr style="background:rgba(16,185,129,0.05);">
+                <td colspan="2" style="padding:12px 14px; font-weight:700; color:var(--text); border-top:2px solid var(--border);">UMUMIY SUMMA:</td>
+                <td style="padding:12px 14px; font-weight:800; color:var(--success); font-size:15px; text-align:right; border-top:2px solid var(--border);">${fmt(total)}</td>
+              </tr>
+            </tfoot>
+          </table>
+          </div>`;
+        }
+        content.innerHTML = html;
+      } catch (e) {
+        content.innerHTML = '<div style="color:var(--danger);text-align:center;padding:40px;background:rgba(239,68,68,0.05);border-radius:12px;border:1px solid rgba(239,68,68,0.2);"><div style="font-size:32px;margin-bottom:10px;">⚠️</div>Ma\'lumotlarni yuklashda xatolik yuz berdi.</div>';
+      }
+    }
+
+    async function rOrd() {
+      pSel(); let ords = await D.g('orders'); if (oF !== 'all') ords = ords.filter(o => o.status === oF);
+      const stC = { pending: 'py', done: 'pg', 'in-progress': 'pb', cancelled: 'pr' }; const stT = { pending: '⏳ Kutilmoqda', done: '✅ Tugallandi', 'in-progress': '🔄 Jarayonda', cancelled: '❌ Bekor' };
+      document.getElementById('o-tb').innerHTML = ords.map((o, i) => {
+        const ts = o.created_at || '';
+        const datePart = o.date || ts.split(' ')[0] || ts.split('T')[0] || '—';
+        const serviceText = o.service || o.service_name || 'Buyurtma';
+        return `<tr><td>${i + 1}</td><td>${datePart}</td><td><strong>${o.client || o.client_name}</strong><br><small style="color:var(--text3)">${o.phone || o.client_phone || ''}</small></td><td><button class="btn btn-s bsm" style="padding:4px 8px;font-size:11px;" onclick="vO(${o.id}, '${serviceText}')">👁 Ko'rish</button></td><td>${o.worker || o.worker_name || '—'}</td><td><strong>${fmt(o.amount || o.total_amount)}</strong></td><td><select onchange="uOS(${o.id},this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 7px;border-radius:6px;font-size:11.5px;">${['pending', 'in-progress', 'done', 'cancelled'].map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${stT[s]}</option>`).join('')}</select></td><td><button class="bi" onclick="dOrd(${o.id})">🗑</button></td></tr>`;
+      }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text3);">Buyurtmalar yo\'q</td></tr>';
+    }
+    function fo(st, el) { oF = st; document.querySelectorAll('#o-tabs .tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); rOrd() }
+    function oo() { pSel();['om-cl', 'om-ph', 'om-am', 'om-nt'].forEach(id => document.getElementById(id).value = ''); om('modal-ord') }
+    async function aO() {
+      const cl = document.getElementById('om-cl').value.trim(); if (!cl) { toast2('Mijoz ismini kiriting!', 'e'); return }
+      const wEl = document.getElementById('om-wk');
+      const rec = {
+        client_name: cl,
+        client_phone: document.getElementById('om-ph').value,
+        service_name: document.getElementById('om-sv').value,
+        worker_name: wEl.options[wEl.selectedIndex]?.text || '—',
+        total_amount: gV('om-am'),
+        status: document.getElementById('om-st').value,
+        note: document.getElementById('om-nt').value
+      };
+      await fetch(`${API_URL}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rec)
+      });
+      cm('modal-ord'); await rOrd(); toast2('Buyurtma qo\'shildi!');
+    }
+    function uOS(id, st) { fetch(`${API_URL}/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: st }) }).then(() => { toast2('Holat yangilandi!'); rOrd(); }) }
+    async function dOrd(id) { if (!confirm('O\'chirishni tasdiqlaysizmi?')) return; await fetch(`${API_URL}/orders/${id}`, { method: 'DELETE' }); await rOrd(); toast2('Buyurtma o\'chirildi', 'e') }
+
+    let svF = 'all';
+    function fSv(w, el) {
+      svF = w;
+      document.querySelectorAll('#page-services .tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      rSvc();
+    }
+
+    async function rSvc() {
+      const svcs = await D.g('services');
+      let filtered = svcs;
+      if (svF !== 'all') filtered = svcs.filter(s => s.worker_name === svF);
+
+      document.getElementById('svc-grid').innerHTML = filtered.map(s => {
+        const wCl = s.worker_name === 'Xodim 1' ? 'pb' : (s.worker_name === 'Xodim 2' ? 'py' : 'pg');
+        return `<div class="card" style="text-align:center; position:relative; opacity:${s.active ? 1 : 0.5}">
+          <div style="font-size:40px;margin-bottom:10px;">${s.icon || '📷'}</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:5px;">${s.name}</div>
+          <div style="font-size:18px;font-weight:800;color:var(--success);margin-bottom:7px;">${fmt(s.price)}</div>
+          <div style="font-size:12.5px;color:var(--text3);margin-bottom:5px;">${s.category}</div>
+          <div style="margin-bottom:12px;"><span class="pill ${wCl}">${s.worker_name || 'Umumiy'}</span></div>
+          <div style="display:flex;gap:7px;justify-content:center;">
+            <button class="btn btn-d bsm" onclick="dSvc(${s.id})">🗑</button>
+            <button class="btn btn-o bsm" onclick="osvm(${s.id})">✏️</button>
+            <button class="btn btn-o bsm" onclick="tSvc(${s.id})">${s.active ? '⏸' : '▶️'}</button>
+          </div>
+        </div>`
+      }).join('') || '<div style="color:var(--text3)">Xizmatlar yo\'q</div>';
+    }
+    let curSvcId = null;
+    async function osvm(id = null) {
+      curSvcId = id;
+      const mt = document.querySelector('#modal-svc .mt');
+      const btn = document.querySelector('#modal-svc .btn-p');
+
+      if (id) {
+        mt.textContent = '✏️ Xizmatni tahrirlash';
+        btn.textContent = '✅ Saqlash';
+        const svcs = await D.g('services');
+        const s = svcs.find(x => x.id === id);
+        if (s) {
+          document.getElementById('sv-n').value = s.name;
+          document.getElementById('sv-e').value = s.icon || '📷';
+          document.getElementById('sv-p').value = s.price;
+          document.getElementById('sv-d').value = s.category || 'other';
+          document.getElementById('sv-wk').value = (s.worker_name === 'all' || !s.worker_name) ? 'Xodim 1' : s.worker_name;
+        }
+      } else {
+        mt.textContent = '🎨 Xizmat qo\'shish';
+        btn.textContent = '✅ Qo\'shish';
+        ['sv-n', 'sv-e', 'sv-p', 'sv-d', 'sv-wk'].forEach(id => {
+          const el = document.getElementById(id);
+          if (id === 'sv-e') el.value = '📷';
+          else if (id === 'sv-p') el.value = '0';
+          else if (id === 'sv-wk') el.value = (svF === 'all' ? 'Xodim 1' : svF);
+          else el.value = '';
+        });
+      }
+      om('modal-svc');
+    }
+    async function aSvc() {
+      const n = document.getElementById('sv-n').value.trim(); if (!n) { toast2('Nom kiriting!', 'e'); return }
+      const price = gV('sv-p');
+      const emoji = document.getElementById('sv-e').value || '📷';
+      const category = document.getElementById('sv-d').value;
+      const worker_name = document.getElementById('sv-wk').value;
+
+      const body = JSON.stringify({ name: n, price, icon: emoji, category, color: '#6366f1', rgb: '99, 102, 241', worker_name, active: 1 });
+
+      if (curSvcId) {
+        const res = await fetch(`${API_URL}/services/${curSvcId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body
+        });
+        if (res.ok) toast2('Xizmat yangilandi!');
+        else toast2('Xatolik yuz berdi!', 'e');
+      } else {
+        const res = await fetch(`${API_URL}/services`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body
+        });
+        if (res.ok) toast2('Yangi xizmat qo\'shildi!');
+        else toast2('Xatolik yuz berdi!', 'e');
+      }
+
+      cm('modal-svc'); await rSvc();
+    }
+    async function dSvc(id) {
+      if (!confirm('Xizmatni o\'chirish?')) return;
+      await fetch(`${API_URL}/services/${id}`, { method: 'DELETE' });
+      await rSvc(); toast2('Xizmat o\'chirildi', 'e');
+    }
+    async function tSvc(id) {
+      const svcs = await D.g('services');
+      const s = svcs.find(x => x.id === id);
+      if (!s) return;
+
+      await fetch(`${API_URL}/services/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: s.name,
+          category: s.category,
+          price: s.price,
+          icon: s.icon,
+          active: s.active ? 0 : 1,
+          worker_name: s.worker_name
+        })
+      });
+      await rSvc(); toast2('Holat o\'zgartirildi');
+    }
+
+    async function rCl() { const cls = await D.g('clients'); const ords = await D.g('orders'); rCT(cls, ords) }
+    function rCT(cls, ords) {
+      document.getElementById('cl-tb').innerHTML = cls.map((c, i) => {
+        const co = ords.filter(o => (o.client === c.name || o.client_name === c.name));
+        const tot = co.reduce((a, b) => a + (b.amount || b.total_amount), 0) + (c.initial_total_sum || 0);
+        const count = co.length + (c.initial_orders_count || 0);
+        const lastOrder = co.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''))[0]; const last = lastOrder ? (lastOrder.created_at || '').slice(0, 10) : '—';
+        return `<tr><td>${i + 1}</td><td><strong>${c.name}</strong></td><td>${c.phone || '—'}</td><td><span class="pill pb">${count} ta</span></td><td><strong style="color:var(--success)">${fmt(tot)}</strong></td><td>${last}</td><td><button class="bi" onclick="dCl(${c.id})">🗑</button></td></tr>`
+      }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text3);">Mijozlar yo\'q</td></tr>';
+    }
+    async function fc(q) { const cls = await D.g('clients'); const ords = await D.g('orders'); rCT(cls.filter(c => c.name.toLowerCase().includes(q.toLowerCase()) || c.phone?.includes(q)), ords) }
+    function ocm() { ['cl-n', 'cl-p', 'cl-a', 'cl-x', 'cl-oc', 'cl-ts'].forEach(id => document.getElementById(id).value = ''); om('modal-cl') }
+    async function aCl() {
+      const n = document.getElementById('cl-n').value.trim(); if (!n) { toast2('Ism kiriting!', 'e'); return }
+      const phone = document.getElementById('cl-p').value;
+      const address = document.getElementById('cl-a').value;
+      const oc = parseInt(document.getElementById('cl-oc').value) || 0;
+      const ts = gV('cl-ts');
+      const note = document.getElementById('cl-x').value;
+      await fetch(`${API_URL}/clients`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: n, phone, address, note, initial_orders_count: oc, initial_total_sum: ts })
+      });
+      cm('modal-cl'); await rCl(); toast2(n + ' mijoz qo\'shildi!');
+    }
+    async function dCl(id) { if (!confirm('Mijozni o\'chirish?')) return; await fetch(`${API_URL}/clients/${id}`, { method: 'DELETE' }); await rCl(); toast2('Mijoz o\'chirildi', 'e') }
+
+    async function rR() {
+      const el = document.getElementById('r-d'); if (!el.value) el.value = td(); const date = el.value;
+      const allSales = await D.g('sales');
+      const sales = allSales.filter(s => (s.date === date || s.created_at?.startsWith(date)));
+      const exp = (await D.g('expenses')).filter(e => e.date === date);
+      const att = (await D.g('attendance')).filter(a => a.date === date);
+      const ts = sales.reduce((a, b) => a + (b.amount || b.total_amount), 0); const te = exp.reduce((a, b) => a + b.amount, 0); const pr = ts - te; const sMap = { came: '✅ Keldi', late: '⏰ Kech', absent: '❌ Kelmadi', sick: '🤒 Kasal', vacation: "🏖 Ta'til" };
+      const allOrds = await D.g('orders');
+      document.getElementById('r-stats').innerHTML = `<div class="card sc"><div class="lbl">Savdo</div><div class="val up">${fmt(ts)}</div><div class="ib">💰</div></div><div class="card sc"><div class="lbl">Chiqim</div><div class="val down">${fmt(te)}</div><div class="ib">📤</div></div><div class="card sc"><div class="lbl">Foyda</div><div class="val ${pr >= 0 ? 'up' : 'down'}">${fmt(pr)}</div><div class="ib">📊</div></div><div class="card sc"><div class="lbl">Buyurtmalar</div><div class="val" style="color:var(--info)">${allOrds.filter(o => o.created_at?.startsWith(date)).length}</div><div class="ib">📋</div></div>`;
+      document.getElementById('r-s').innerHTML = sales.map(s => { const ts2 = s.created_at || ''; const tPart = s.time || ts2.split(' ')[1]?.slice(0, 5) || ts2.split('T')[1]?.slice(0, 5) || '—'; return `<tr><td>${tPart}</td><td>${s.service || s.service_name || 'Buyurtma'}</td><td>${s.client || s.client_name || '—'}</td><td><strong style="color:var(--success)">${fmt(s.amount || s.total_amount)}</strong></td></tr>` }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);">Savdo yo\'q</td></tr>';
+      document.getElementById('r-e').innerHTML = exp.map(e => `<tr><td>${e.time || '—'}</td><td>${e.category}</td><td>${e.note || '—'}</td><td><strong style="color:var(--danger)">${fmt(e.amount)}</strong></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);">Chiqim yo\'q</td></tr>';
+      document.getElementById('r-a').innerHTML = att.map(a => `<div style="display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--border);font-size:12.5px;"><span style="color:var(--text2)">${a.workerName}</span><span>${sMap[a.status] || a.status}</span><span style="color:var(--text3)">${a.timeIn || '—'}</span></div>`).join('') || '<div style="color:var(--text3);font-size:13px;text-align:center;padding:9px;">Davomat belgilanmagan</div>';
+    }
+
+    async function rSet() {
+      const sales = await D.g('sales'); const exp = await D.g('expenses'); const wks = await D.g('workers'); const ords = await D.g('orders');
+      document.getElementById('set-stats').innerHTML = [['👥 Xodimlar', wks.length], ['💰 Savdolar', sales.length + ' ta'], ['📤 Chiqimlar', exp.length + ' ta'], ['📋 Buyurtmalar', ords.length + ' ta'], ['💵 Jami savdo', fmt(sales.reduce((a, b) => a + (b.amount || b.total_amount), 0))], ['💸 Jami chiqim', fmt(exp.reduce((a, b) => a + b.amount, 0))]].map(([l, v]) => `<div style="display:flex;justify-content:space-between;padding:9px;background:var(--bg3);border-radius:7px;font-size:13px;"><span style="color:var(--text3)">${l}</span><strong>${v}</strong></div>`).join('');
+    }
+    async function cd(t) {
+      if (!confirm('Haqiqatan ham o\'chirishni hohlaysizmi?')) return;
+      if (t === 'sales') {
+        const sales = await D.g('sales');
+        await Promise.all(sales.map(s => fetch(`${API_URL}/orders/${s.id}`, { method: 'DELETE' })));
+      } else if (t === 'expenses') {
+        const exps = await D.g('expenses');
+        await Promise.all(exps.map(e => fetch(`${API_URL}/expenses/${e.id}`, { method: 'DELETE' })));
+      } else if (t === 'all') {
+        localStorage.clear();
+        location.reload();
+      }
+      await rSet();
+      toast2('O\'chirildi!', 'e');
+    }
+
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      D.so('theme', next);
+      document.getElementById('theme-btn').textContent = next === 'dark' ? '🌙' : '☀️';
+    }
+    const savedTheme = D.go('theme', 'dark');
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('theme-btn').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+    (async () => {
+      await rD();
+    })();
+  </script>
+</body>
+
+</html>
