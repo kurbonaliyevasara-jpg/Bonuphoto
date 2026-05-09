@@ -1163,7 +1163,7 @@
           class="ic">👤</span>Xodim-1 xizmatlari</div>
       <div class="ni" onclick="spSv('Xodim 2')" style="padding-left:40px; font-size:13px; opacity:0.8;"><span
           class="ic">👤</span>Xodim-2 xizmatlari</div>
-      <div class="ni" onclick="sp('clients')"><span class="ic">🙍</span>Qarzdor Mijozlar</div>
+      <div class="ni" onclick="sp('debts')"><span class="ic">🙍</span>Qarzdor Mijozlar</div>
       <div class="nav-lbl" style="margin-top:10px;">Hisobotlar</div>
       <div class="ni" onclick="sp('reports')"><span class="ic">📑</span>Kunlik hisobot</div>
       <div class="ni" onclick="sp('settings')"><span class="ic">⚙️</span>Sozlamalar</div>
@@ -1472,6 +1472,7 @@
               <thead>
                 <tr>
                   <th>Sana</th>
+                  <th>Xodim</th>
                   <th>Kategoriya</th>
                   <th>Izoh</th>
                   <th>Summa</th>
@@ -1599,6 +1600,38 @@
               </tr>
             </thead>
             <tbody id="cl-tb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEBTS -->
+    <div class="page" id="page-debts">
+      <div class="sh">
+        <div class="st">💸 Qarzdor Mijozlar</div>
+      </div>
+      <div class="card">
+        <div class="sh">
+          <div class="si"><span class="sic">🔍</span><input class="sq" placeholder="Mijoz qidirish..." oninput="fDebts(this.value)"></div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Sana</th>
+                <th>Mijoz Ismi</th>
+                <th>Telefon</th>
+                <th>Buyurtma nomi</th>
+                <th>Soni</th>
+                <th>Jami Summa</th>
+                <th>To'ladi</th>
+                <th>Qarzi</th>
+                <th>Xodim</th>
+                <th>Amallar</th>
+              </tr>
+            </thead>
+            <tbody id="d-tb" style="white-space: nowrap;"></tbody>
           </table>
         </div>
       </div>
@@ -1955,7 +1988,7 @@
     function om(id) { document.getElementById(id).classList.add('open') }
     document.querySelectorAll('.mo').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open') }));
 
-    const ptitles = { dashboard: '📊 Bosh sahifa', attendance: '🕐 Davomat', workers: '👥 Xodimlar', sales: '💰 Savdo', expenses: '📤 Chiqimlar', finance: '📈 Moliya hisoboti', orders: '📋 Buyurtmalar', services: '🎨 Xizmat turlari', clients: '🙍 Mijozlar', reports: '📑 Kunlik hisobot', settings: '⚙️ Sozlamalar' };
+    const ptitles = { dashboard: '📊 Bosh sahifa', attendance: '🕐 Davomat', workers: '👥 Xodimlar', sales: '💰 Savdo', expenses: '📤 Chiqimlar', finance: '📈 Moliya hisoboti', orders: '📋 Buyurtmalar', services: '🎨 Xizmat turlari', clients: '🙍 Mijozlar', reports: '📑 Kunlik hisobot', settings: '⚙️ Sozlamalar', debts: '💸 Qarzdor Mijozlar' };
     async function sp(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.ni').forEach(n => n.classList.remove('active')); document.getElementById('page-' + id).classList.add('active'); document.querySelectorAll('.ni').forEach(n => { if (n.onclick && n.onclick.toString().includes("'" + id + "'")) n.classList.add('active') }); document.getElementById('pt').textContent = ptitles[id] || id; await rP(id) }
     async function spSv(w) {
       await sp('services');
@@ -1963,7 +1996,7 @@
       const target = Array.from(tabs).find(t => t.textContent.includes(w === 'Xodim 1' ? '1-Xodim' : '2-Xodim'));
       if (target) fSv(w, target);
     }
-    async function rP(id) { const f = { dashboard: rD, attendance: rAtt, workers: rWk, sales: rS, expenses: rEx, finance: rF, orders: rOrd, services: rSvc, clients: rCl, reports: rR, settings: rSet }; if (f[id]) await f[id]() }
+    async function rP(id) { const f = { dashboard: rD, attendance: rAtt, workers: rWk, sales: rS, expenses: rEx, finance: rF, orders: rOrd, services: rSvc, clients: rCl, reports: rR, settings: rSet, debts: rDebts }; if (f[id]) await f[id]() }
 
     async function seed() {
       // Seed is now handled by the server (db.js)
@@ -2204,7 +2237,7 @@
       const cc = ['#6C3FE8', '#EC4899', '#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316'];
       document.getElementById('e-cats').innerHTML = Object.entries(cats).sort((a, b) => b[1] - a[1]).map(([c, v], i) => `<div><div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12.5px;"><span style="color:var(--text2)">${c}</span><strong>${fmt(v)}</strong></div><div class="pb-wrap"><div class="pb-fill" style="width:${(v / total * 100).toFixed(1)}%;background:${cc[i % cc.length]}"></div></div></div>`).join('');
 
-      document.getElementById('e-tb').innerHTML = exp.slice().reverse().map(e => `<tr><td>${e.date} ${e.time}</td><td><span class="pill pr">${e.category}</span></td><td>${e.note || '—'}</td><td><strong style="color:var(--danger)">${fmt(e.amount)}</strong></td><td><button class="bi" onclick="dEx(${e.id})">🗑</button></td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);">Chiqimlar yo\'q</td></tr>';
+      document.getElementById('e-tb').innerHTML = exp.slice().reverse().map(e => `<tr><td>${e.date} ${e.time}</td><td><span class="pill pb">${e.worker_name || 'Admin'}</span></td><td><span class="pill pr">${e.category}</span></td><td>${e.note || '—'}</td><td><strong style="color:var(--danger)">${fmt(e.amount)}</strong></td><td><button class="bi" onclick="dEx(${e.id})">🗑</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text3);">Chiqimlar yo\'q</td></tr>';
     }
     function oe() { ['ex-am', 'ex-nt'].forEach(id => document.getElementById(id).value = ''); om('modal-exp') }
     async function aE() {
@@ -2213,7 +2246,8 @@
         date: td(),
         category: document.getElementById('ex-cat').value,
         amount: am,
-        note: document.getElementById('ex-nt').value
+        note: document.getElementById('ex-nt').value,
+        worker_name: 'Admin'
       };
       await D.s('expenses', rec); cm('modal-exp'); await rEx(); await rD(); toast2(fmt(am) + ' chiqim qo\'shildi!');
     }
@@ -2514,6 +2548,38 @@
       }
       await rSet();
       toast2('O\'chirildi!', 'e');
+    }
+
+    async function rDebts() {
+      const debts = await fetch(`${API_URL}/debts`).then(r => r.json());
+      document.getElementById('d-tb').innerHTML = debts.map((d, i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td style="font-size:11.5px; color:var(--text3);">${d.created_at}</td>
+          <td><strong>${d.client_name}</strong></td>
+          <td style="color:var(--primary); font-weight:600;">${d.client_phone || '—'}</td>
+          <td title="${d.service_name || ''}">${d.service_name || '—'}</td>
+          <td>${d.items_count} ta</td>
+          <td>${fmt(d.total_amount)}</td>
+          <td style="color:var(--success)">${fmt(d.paid_amount)}</td>
+          <td style="color:var(--danger); font-weight:700;">${fmt(d.debt_amount)}</td>
+          <td style="font-size:12px;">${d.worker_name}</td>
+          <td><button class="bi" onclick="dDebt(${d.id})">🗑</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--text3);">Qarzdorlar yo\'q</td></tr>';
+    }
+    async function dDebt(id) {
+        if(!confirm('O\'chirishni tasdiqlaysizmi?')) return;
+        await fetch(`${API_URL}/debts/${id}`, { method: 'DELETE' });
+        rDebts();
+        toast2('Qarz o\'chirildi', 'e');
+    }
+    function fDebts(v) {
+        const rows = document.querySelectorAll('#d-tb tr');
+        rows.forEach(r => {
+            if(r.innerText.toLowerCase().includes(v.toLowerCase())) r.style.display = '';
+            else r.style.display = 'none';
+        });
     }
 
     function toggleTheme() {

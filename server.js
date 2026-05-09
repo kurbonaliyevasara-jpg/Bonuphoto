@@ -51,12 +51,15 @@ app.delete('/api/services/:id', (req, res) => {
 
 // --- ORDERS API ---
 app.post('/api/orders', (req, res) => {
+  console.log('Incoming order:', req.body);
   let { client_name, client_phone, total_amount, items, worker_name, service_name, note, status, payment_method } = req.body;
 
   if (!service_name && items && items.length) {
     service_name = items.map(i => i.name).join(', ');
     if (service_name.length > 50) service_name = service_name.substring(0, 47) + '...';
   }
+
+  if (client_name === 'Staff Order') status = 'done';
 
   db.run(
     "INSERT INTO orders (client_name, client_phone, total_amount, worker_name, service_name, note, status, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -202,10 +205,10 @@ app.get('/api/expenses', (req, res) => {
 });
 
 app.post('/api/expenses', (req, res) => {
-  const { category, amount, note } = req.body;
+  const { category, amount, note, worker_name } = req.body;
   db.run(
-    "INSERT INTO expenses (category, amount, note) VALUES (?, ?, ?)",
-    [category, amount, note],
+    "INSERT INTO expenses (category, amount, note, worker_name) VALUES (?, ?, ?, ?)",
+    [category, amount, note, worker_name || 'Admin'],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ id: this.lastID, success: true });
@@ -294,6 +297,55 @@ app.post('/api/salaries', (req, res) => {
   });
 });
 
+// --- DEBTS API ---
+app.get('/api/debts', (req, res) => {
+  db.all("SELECT *, datetime(created_at, '+5 hours') as created_at FROM debts ORDER BY id DESC", (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.post('/api/debts', (req, res) => {
+  console.log('Debts POST Received:', req.body);
+  const { client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name } = req.body;
+  db.run(
+    "INSERT INTO debts (client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    [client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID, success: true });
+    }
+  );
+});
+
+app.patch('/api/debts/:id/pay', (req, res) => {
+  const { amount } = req.body;
+  const id = req.params.id;
+  
+  db.get("SELECT total_amount, paid_amount FROM debts WHERE id = ?", [id], (err, row) => {
+    if (err || !row) return res.status(500).json({ error: 'Topilmadi' });
+    
+    const newPaid = row.paid_amount + parseInt(amount);
+    const newDebt = row.total_amount - newPaid;
+    
+    db.run(
+      "UPDATE debts SET paid_amount = ?, debt_amount = ? WHERE id = ?",
+      [newPaid, newDebt, id],
+      function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, newPaid, newDebt });
+      }
+    );
+  });
+});
+
+app.delete('/api/debts/:id', (req, res) => {
+  db.run("DELETE FROM debts WHERE id = ?", req.params.id, (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
 app.listen(PORT, () => {
-  console.log(`Bonu Photo Server running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });

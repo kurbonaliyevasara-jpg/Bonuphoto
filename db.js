@@ -71,10 +71,18 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       category TEXT NOT NULL,
       amount INTEGER NOT NULL,
+      worker_name TEXT DEFAULT 'Admin',
       note TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Migration: expenses.worker_name ustuni qo'shish
+  db.all("PRAGMA table_info(expenses)", (err, rows) => {
+    if (err || !rows) return;
+    const hasWorker = rows.some(r => r.name === 'worker_name');
+    if (!hasWorker) db.run("ALTER TABLE expenses ADD COLUMN worker_name TEXT DEFAULT 'Admin'");
+  });
 
   // Attendance table
   db.run(`
@@ -131,6 +139,30 @@ db.serialize(() => {
     if (err || !rows) return;
     const hasPayment = rows.some(r => r.name === 'payment_method');
     if (!hasPayment) db.run("ALTER TABLE orders ADD COLUMN payment_method TEXT DEFAULT 'Karta'");
+  });
+
+  // Debts table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS debts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_name TEXT NOT NULL,
+      client_phone TEXT,
+      service_name TEXT,
+      items_count INTEGER,
+      total_amount INTEGER NOT NULL,
+      paid_amount INTEGER NOT NULL,
+      debt_amount INTEGER NOT NULL,
+      worker_name TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.all("PRAGMA table_info(debts)", (err, rows) => {
+    if (err || !rows) return;
+    const hasService = rows.some(r => r.name === 'service_name');
+    const hasPhone = rows.some(r => r.name === 'client_phone');
+    if (!hasService) db.run("ALTER TABLE debts ADD COLUMN service_name TEXT");
+    if (!hasPhone) db.run("ALTER TABLE debts ADD COLUMN client_phone TEXT");
   });
 
   // Seed initial services if table is empty

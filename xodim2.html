@@ -667,6 +667,14 @@
                     <i data-lucide="moon" id="themeIcon"></i>
                 </button>
 
+                <button class="theme-toggle" onclick="openDebtModal()" title="Katta buyurtma (Qarz)" style="color: #8b5cf6; border-color: rgba(139, 92, 246, 0.3);">
+                    <i data-lucide="shopping-bag"></i>
+                </button>
+
+                <button class="theme-toggle" onclick="openExpenseModal()" title="Chiqim qo'shish" style="color: #f59e0b; border-color: rgba(245, 158, 11, 0.3);">
+                    <i data-lucide="minus-circle"></i>
+                </button>
+
                 <button class="theme-toggle" onclick="logout()" title="Chiqish" style="color: #ec4899; border-color: rgba(236, 72, 153, 0.3);">
                     <i data-lucide="log-out"></i>
                 </button>
@@ -735,6 +743,151 @@
         <h2 style="font-size: 32px; margin-bottom: 12px;">Muvaffaqiyatli!</h2>
         <p style="color: var(--text-muted); margin-bottom: 30px;">Buyurtma saqlandi va kvitansiya tayyor.</p>
         <button class="category-btn active" onclick="resetApp()">YANGI BUYURTMA</button>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expenseModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
+        <div
+            style="background:var(--surface); padding:30px; border-radius:24px; width:100%; max-width:850px; width: 95%; border:1px solid var(--border); box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+            <h2 style="margin-bottom:20px; font-family:'Outfit';">📤 Chiqimlar</h2>
+            
+            <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                <!-- Form -->
+                <div style="flex: 1; min-width: 300px;">
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Kategoriya</label>
+                        <select id="expCategory" style="width:100%; padding:12px; background:var(--background); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px; outline:none;">
+                            <option value="Tushlik">Tushlik</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Kanselyariya">Kanselyariya</option>
+                            <option value="Ijaraga">Ijaraga</option>
+                            <option value="Boshqa">Boshqa</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Summa (so'm)</label>
+                        <input type="text" id="expAmount" placeholder="Masalan: 20 000" oninput="formatMoneyInput(this)"
+                            style="width:100%; padding:12px; background:var(--background); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px;">
+                    </div>
+                    <div style="margin-bottom:25px;">
+                        <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Izoh (ixtiyoriy)</label>
+                        <textarea id="expNote" placeholder="Izoh yozing..."
+                            style="width:100%; padding:12px; background:var(--background); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px; height:80px; resize:none;"></textarea>
+                    </div>
+                    <div style="display:flex; gap:12px;">
+                        <button onclick="closeExpenseModal()"
+                            style="flex:1; padding:14px; border-radius:12px; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; font-weight:600;">Bekor qilish</button>
+                        <button onclick="submitExpense()"
+                            style="flex:1; padding:14px; border-radius:12px; border:none; background:var(--primary); color:white; cursor:pointer; font-weight:700;">Tasdiqlash</button>
+                    </div>
+                </div>
+
+                <!-- History -->
+                <div style="flex: 1; min-width: 300px; border-left: 1px solid var(--border); padding-left: 30px;">
+                    <h3 style="font-size: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="history" style="width:18px;"></i> Tarix (Faqat ko'rish)
+                    </h3>
+                    <div id="expenseHistory" style="max-height: 350px; overflow-y: auto; padding-right: 10px;">
+                        <div style="text-align: center; padding: 20px; color: var(--text-muted);">Yuklanmoqda...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debt Modal -->
+    <div id="debtModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
+        <div
+            style="background:var(--surface); padding:30px; border-radius:24px; width:100%; max-width:850px; width: 95%; border:1px solid var(--border); box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+            <h2 style="margin-bottom:20px; font-family:'Outfit';">💼 Katta buyurtmalar</h2>
+            
+            <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                <!-- Form -->
+                <div style="flex: 1; min-width: 280px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <div style="flex: 2;">
+                            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Mijoz ismi</label>
+                            <input type="text" id="debtClient" placeholder="Ismi"
+                                style="width:100%; padding:12px; background:var(--background); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px;">
+                        </div>
+                        <div style="flex: 2;">
+                            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Telefon</label>
+                            <input type="text" id="debtPhone" placeholder="+998-90-000-00-00" oninput="formatPhoneInput(this)"
+                                style="width:100%; padding:12px; background:var(--background); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px;">
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Buyurtma nomi / Izoh</label>
+                        <input type="text" id="debtService" placeholder="Nima buyurtma berdi?"
+                            style="width:100%; padding:12px; background:var(--background); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px;">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <div style="flex: 1;">
+                            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Soni</label>
+                            <input type="number" id="debtCount" placeholder="0"
+                                style="width:100%; padding:12px; background:var(--background); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px;">
+                        </div>
+                        <div style="flex: 2;">
+                            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Jami narxi</label>
+                            <input type="text" id="debtTotal" placeholder="0" oninput="formatMoneyInput(this); calcDebt()"
+                                style="width:100%; padding:12px; background:var(--background); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px;">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 25px;">
+                        <div style="flex: 1;">
+                            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">To'ladi</label>
+                            <input type="text" id="debtPaid" placeholder="0" oninput="formatMoneyInput(this); calcDebt()"
+                                style="width:100%; padding:12px; background:var(--background); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Qarzi</label>
+                            <input type="text" id="debtRemaining" readonly
+                                style="width:100%; padding:12px; background:rgba(244, 63, 94, 0.1); border:1px solid rgba(244, 63, 94, 0.2); border-radius:12px; color:#f43f5e; font-size:15px; font-weight:700;">
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:12px;">
+                        <button onclick="closeDebtModal()"
+                            style="flex:1; padding:14px; border-radius:12px; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; font-weight:600;">Bekor qilish</button>
+                        <button onclick="submitDebt()"
+                            style="flex:1; padding:14px; border-radius:12px; border:none; background:#8b5cf6; color:white; cursor:pointer; font-weight:700;">Saqlash</button>
+                    </div>
+                </div>
+
+                <!-- Debt History -->
+                <div style="flex: 1; min-width: 280px; border-left: 1px solid var(--border); padding-left: 25px;">
+                    <h3 style="font-size:16px; margin-bottom:15px; display:flex; align-items:center; gap:8px; color:#8b5cf6;">
+                        <i data-lucide="list" style="width:18px;"></i> Oxirgi qarzlar
+                    </h3>
+                    <div id="debtHistory" style="max-height: 380px; overflow-y: auto; padding-right: 5px;">
+                        <div style="text-align:center; padding:20px; color:var(--text-muted);">Yuklanmoqda...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pay Debt Modal -->
+    <div id="payDebtModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:300; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
+        <div style="background:var(--surface); padding:25px; border-radius:20px; width:100%; max-width:320px; border:1px solid var(--border); box-shadow:0 15px 40px rgba(0,0,0,0.5);">
+            <h3 style="margin-bottom:15px; font-family:'Outfit';">💰 To'lovni qabul qilish</h3>
+            <input type="hidden" id="payingDebtId">
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px;">Summa (so'm)</label>
+                <input type="text" id="payAmount" placeholder="0" oninput="formatMoneyInput(this)"
+                    style="width:100%; padding:12px; background:var(--background); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:18px; font-weight:700;">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closePayModal()" style="flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer;">Bekor qilish</button>
+                <button onclick="confirmPayDebt()" style="flex:1; padding:12px; border-radius:10px; border:none; background:var(--accent); color:white; font-weight:700; cursor:pointer;">Tasdiqlash</button>
+            </div>
+        </div>
     </div>
 
     <!-- Other Service Modal -->
@@ -920,7 +1073,8 @@
                         name: item.name,
                         price: item.price,
                         quantity: item.quantity
-                    }))
+                    })),
+                    status: 'done'
                 };
 
                 try {
@@ -974,6 +1128,217 @@
             document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             btn.style.color = 'var(--primary)';
+        }
+
+        async function fetchExpenseHistory() {
+            const historyDiv = document.getElementById('expenseHistory');
+            try {
+                const res = await fetch(`${API_URL}/expenses`);
+                const allExpenses = await res.json();
+                const myExpenses = allExpenses.filter(e => e.worker_name === 'Xodim 2');
+                
+                if (myExpenses.length === 0) {
+                    historyDiv.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Hozircha chiqimlar yo\'q</div>';
+                    return;
+                }
+
+                historyDiv.innerHTML = myExpenses.map(e => {
+                    const date = e.created_at ? e.created_at.split(' ')[0] : '—';
+                    const time = e.created_at ? e.created_at.split(' ')[1]?.substring(0, 5) : '—';
+                    const formattedAmount = e.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                    return `
+                        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span style="font-weight:700; color:#ec4899;">${e.category}</span>
+                                <span style="font-weight:800; color:var(--text);">${formattedAmount} so'm</span>
+                            </div>
+                            <div style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between;">
+                                <span>${e.note || '—'}</span>
+                                <span>${date} ${time}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } catch (e) {
+                console.error(e);
+                historyDiv.innerHTML = '<div style="color:#ec4899; text-align:center;">Xatolik yuz berdi</div>';
+            }
+        }
+
+        function openExpenseModal() { 
+            document.getElementById('expenseModal').style.display = 'flex'; 
+            fetchExpenseHistory();
+        }
+        function closeExpenseModal() { document.getElementById('expenseModal').style.display = 'none'; }
+        async function submitExpense() {
+            const cat = document.getElementById('expCategory').value;
+            const amRaw = document.getElementById('expAmount').value;
+            const am = amRaw.replace(/\s/g, '');
+            const nt = document.getElementById('expNote').value;
+            if(!am) return alert('Summani kiriting!');
+            try {
+                const res = await fetch(`${API_URL}/expenses`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ category: cat, amount: parseInt(am), note: nt, worker_name: 'Xodim 2' })
+                });
+                if(res.ok) {
+                    closeExpenseModal();
+                    // Update success overlay for expense
+                    const overlay = document.getElementById('successOverlay');
+                    overlay.querySelector('h2').innerText = 'Chiqim saqlandi!';
+                    overlay.querySelector('p').innerText = 'Xarajat muvaffaqiyatli ro\'yxatga olindi.';
+                    overlay.classList.add('active');
+
+                    document.getElementById('expAmount').value = '';
+                    document.getElementById('expNote').value = '';
+                    fetchExpenseHistory();
+                } else {
+                    const err = await res.json();
+                    alert('Xatolik: ' + err.error);
+                }
+            } catch(e) { 
+                console.error(e);
+                alert('Serverga ulanishda xatolik!');
+            }
+        }
+
+        function formatMoneyInput(el) {
+            let v = el.value.replace(/\D/g, '');
+            el.value = v.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        }
+
+        function openDebtModal() { 
+            document.getElementById('debtModal').style.display = 'flex'; 
+            fetchDebtHistory();
+        }
+        function closeDebtModal() { document.getElementById('debtModal').style.display = 'none'; }
+        function calcDebt() {
+            const total = parseInt(document.getElementById('debtTotal').value.replace(/\s/g, '')) || 0;
+            const paid = parseInt(document.getElementById('debtPaid').value.replace(/\s/g, '')) || 0;
+            const rem = total - paid;
+            document.getElementById('debtRemaining').value = rem.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + " so'm";
+        }
+        async function fetchDebtHistory() {
+            const historyDiv = document.getElementById('debtHistory');
+            try {
+                const res = await fetch(`${API_URL}/debts`);
+                const allDebts = await res.json();
+                const myDebts = allDebts.filter(d => d.worker_name === 'Xodim 2');
+                
+                if (myDebts.length === 0) {
+                    historyDiv.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Qarzlar yo\'q</div>';
+                    return;
+                }
+
+                historyDiv.innerHTML = myDebts.slice(0, 20).map(d => {
+                    const date = d.created_at ? d.created_at.split(' ')[0] : '—';
+                    return `
+                        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span style="font-weight:700; color:var(--text);">${d.client_name}</span>
+                                <span style="font-size:11px; color:var(--text-muted);">${date}</span>
+                            </div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">${d.service_name || '—'} (${d.items_count} ta)</div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:12px; color:var(--success); font-weight:600;">To'landi: ${d.paid_amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")}</span>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span style="font-size:13px; color:#f43f5e; font-weight:700;">Qarz: ${d.debt_amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")}</span>
+                                    ${d.debt_amount > 0 ? `<button onclick="payDebt(${d.id})" style="background:var(--accent); color:white; border:none; padding:6px 12px; border-radius:8px; font-size:11px; cursor:pointer; font-weight:700; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);">TO'LASH</button>` : '<span style="color:var(--accent); font-size:11px; font-weight:700;">✅ TUGALDI</span>'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } catch (e) {
+                console.error(e);
+                historyDiv.innerHTML = '<div style="color:#ec4899; text-align:center;">Xatolik yuz berdi</div>';
+            }
+        }
+        function payDebt(id) {
+            document.getElementById('payingDebtId').value = id;
+            document.getElementById('payAmount').value = '';
+            document.getElementById('payDebtModal').style.display = 'flex';
+        }
+        function closePayModal() { document.getElementById('payDebtModal').style.display = 'none'; }
+        
+        async function confirmPayDebt() {
+            const id = document.getElementById('payingDebtId').value;
+            const amount = document.getElementById('payAmount').value.replace(/\s/g, '');
+            if(!amount) return alert('Summani kiriting!');
+            
+            try {
+                const res = await fetch(`${API_URL}/debts/${id}/pay`, {
+                    method: 'PATCH',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ amount: parseInt(amount) })
+                });
+                if(res.ok) {
+                    closePayModal();
+                    toast2('To\'lov saqlandi!', 's');
+                    fetchDebtHistory();
+                }
+            } catch(e) { console.error(e); }
+        }
+        async function submitDebt() {
+            const name = document.getElementById('debtClient').value.trim();
+            const phone = document.getElementById('debtPhone').value.trim();
+            const service = document.getElementById('debtService').value.trim();
+            const count = parseInt(document.getElementById('debtCount').value) || 0;
+            const total = parseInt(document.getElementById('debtTotal').value.replace(/\s/g, '')) || 0;
+            const paid = parseInt(document.getElementById('debtPaid').value.replace(/\s/g, '')) || 0;
+            const rem = total - paid;
+
+            if(!name || !total) return alert('Mijoz ismi va jami summani kiriting!');
+
+            try {
+                const res = await fetch(`${API_URL}/debts`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        client_name: name,
+                        client_phone: phone,
+                        service_name: service,
+                        items_count: count,
+                        total_amount: total,
+                        paid_amount: paid,
+                        debt_amount: rem,
+                        worker_name: 'Xodim 2'
+                    })
+                });
+                if(res.ok) {
+                    closeDebtModal();
+                    const overlay = document.getElementById('successOverlay');
+                    overlay.querySelector('h2').innerText = 'Qarz saqlandi!';
+                    overlay.querySelector('p').innerText = 'Katta buyurtma muvaffaqiyatli ro\'yxatga olindi.';
+                    overlay.classList.add('active');
+                    // Reset inputs
+                    ['debtClient', 'debtPhone', 'debtService', 'debtCount', 'debtTotal', 'debtPaid', 'debtRemaining'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = '';
+                    });
+                    fetchDebtHistory();
+                } else {
+                    alert('Serverda xatolik yuz berdi!');
+                }
+            } catch(e) { 
+                console.error(e);
+                alert('Serverga ulanishda xatolik!');
+            }
+        }
+
+        function formatPhoneInput(el) {
+            let v = el.value.replace(/\D/g, '');
+            if (v.startsWith('998')) v = v.substring(3);
+            if (v.length > 9) v = v.substring(0, 9);
+            let res = '+998';
+            if (v.length > 0) res += '-' + v.substring(0, 2);
+            if (v.length > 2) res += '-' + v.substring(2, 5);
+            if (v.length > 5) res += '-' + v.substring(5, 7);
+            if (v.length > 7) res += '-' + v.substring(7, 9);
+            el.value = res;
         }
 
         init();
