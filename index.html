@@ -1431,8 +1431,15 @@
     <!-- EXPENSES -->
     <div class="page" id="page-expenses">
       <div class="sh">
-        <div class="st">📤 Chiqimlar boshqaruvi</div><button class="btn btn-d bsm" onclick="oe()">+ Chiqim
-          qo'shish</button>
+        <div style="display:flex;align-items:center;gap:15px;">
+          <div class="st">📤 Chiqimlar boshqaruvi</div>
+          <div class="tabs" id="e-w-tabs" style="margin-bottom:0; padding:3px; font-size:12px;">
+            <div class="tab active" onclick="fEW('all', this)">Umumiy</div>
+            <div class="tab" onclick="fEW('Xodim 1', this)">1-Xodimlar</div>
+            <div class="tab" onclick="fEW('Xodim 2', this)">2-Xodimlar</div>
+          </div>
+        </div>
+        <button class="btn btn-d bsm" onclick="oe()">+ Chiqim qo'shish</button>
       </div>
       <div class="g4" style="margin-bottom:22px;">
         <div class="card sc">
@@ -1489,7 +1496,14 @@
     <!-- FINANCE -->
     <div class="page" id="page-finance">
       <div class="sh">
-        <div class="st">📈 Moliyaviy hisobot</div>
+        <div style="display:flex;align-items:center;gap:15px;">
+          <div class="st">📈 Moliya hisoboti</div>
+          <div class="tabs" id="f-w-tabs" style="margin-bottom:0; padding:3px; font-size:12px;">
+            <div class="tab active" onclick="fFW('all', this)">Umumiy</div>
+            <div class="tab" onclick="fFW('Xodim 1', this)">1-Xodimlar</div>
+            <div class="tab" onclick="fFW('Xodim 2', this)">2-Xodimlar</div>
+          </div>
+        </div>
         <select class="fi" style="width:auto;" id="fp" onchange="rF()">
           <option value="day">Bugun</option>
           <option value="week">Bu hafta</option>
@@ -1534,12 +1548,19 @@
       <div class="sh">
         <div class="st">📋 Buyurtmalar</div><button class="btn btn-p bsm" onclick="oo()">+ Buyurtma</button>
       </div>
-      <div class="tabs" id="o-tabs">
-        <div class="tab active" onclick="fo('all',this)">Hammasi</div>
-        <div class="tab" onclick="fo('pending',this)">Kutilmoqda</div>
-        <div class="tab" onclick="fo('in-progress',this)">Jarayonda</div>
-        <div class="tab" onclick="fo('done',this)">Tugallangan</div>
-        <div class="tab" onclick="fo('cancelled',this)">Bekor</div>
+      <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+        <div class="tabs" id="o-w-tabs" style="margin-bottom:0;">
+          <div class="tab active" onclick="fOW('all', this)">Barcha xodimlar</div>
+          <div class="tab" onclick="fOW('Xodim 1', this)">1-Xodimlar</div>
+          <div class="tab" onclick="fOW('Xodim 2', this)">2-Xodimlar</div>
+        </div>
+        <div class="tabs" id="o-tabs" style="margin-bottom:0; font-size:12px; background:rgba(255,255,255,0.02); padding:5px; border-radius:10px;">
+          <div class="tab active" onclick="fo('all',this)">Hammasi</div>
+          <div class="tab" onclick="fo('pending',this)">Kutilmoqda</div>
+          <div class="tab" onclick="fo('in-progress',this)">Jarayonda</div>
+          <div class="tab" onclick="fo('done',this)">Tugallangan</div>
+          <div class="tab" onclick="fo('cancelled',this)">Bekor</div>
+        </div>
       </div>
       <div class="card">
         <div class="tw">
@@ -1608,7 +1629,14 @@
     <!-- DEBTS -->
     <div class="page" id="page-debts">
       <div class="sh">
-        <div class="st">💸 Qarzdor Mijozlar</div>
+        <div style="display:flex;align-items:center;gap:15px;">
+          <div class="st">💸 Qarzdor Mijozlar</div>
+          <div class="tabs" style="margin-bottom:0; padding:3px; font-size:12px;">
+            <div class="tab active" onclick="fDW('all', this)">Umumiy</div>
+            <div class="tab" onclick="fDW('Xodim 1', this)">1-Xodimlar</div>
+            <div class="tab" onclick="fDW('Xodim 2', this)">2-Xodimlar</div>
+          </div>
+        </div>
       </div>
       <div class="card">
         <div class="sh">
@@ -1996,7 +2024,7 @@
       const target = Array.from(tabs).find(t => t.textContent.includes(w === 'Xodim 1' ? '1-Xodim' : '2-Xodim'));
       if (target) fSv(w, target);
     }
-    async function rP(id) { const f = { dashboard: rD, attendance: rAtt, workers: rWk, sales: rS, expenses: rEx, finance: rF, orders: rOrd, services: rSvc, clients: rCl, reports: rR, settings: rSet, debts: rDebts }; if (f[id]) await f[id]() }
+    async function rP(id) { const f = { dashboard: rD, attendance: rAtt, workers: rWk, sales: rS, expenses: rE, finance: rF, orders: rOrd, services: rSvc, clients: rCl, reports: rR, settings: rSet, debts: rDebts }; if (f[id]) await f[id]() }
 
     async function seed() {
       // Seed is now handled by the server (db.js)
@@ -2158,7 +2186,7 @@
 
     async function pSel() {
       const svcs = await D.g('services'); const wks = await D.g('workers');
-      ['sl-svc', 'om-sv'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = svcs.map(s => `<option>${s.name}</option>`).join('') });
+      ['sl-svc', 'om-sv'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = svcs.map(s => `<option value="${s.name}" data-group="${s.worker_name || 'all'}">${s.name}</option>`).join('') });
       ['sl-wk', 'om-wk', 'am-wk'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = wks.map(w => `<option value="${w.id}">${w.name}</option>`).join('') });
     }
     let sWF = 'all';
@@ -2168,11 +2196,39 @@
       el.classList.add('active');
       rS();
     }
+    let dWF = 'all';
+    function fDW(w, el) {
+      dWF = w;
+      document.querySelectorAll('#page-debts .tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      rDebts();
+    }
+    let oWF = 'all';
+    function fOW(w, el) {
+      oWF = w;
+      document.querySelectorAll('#o-w-tabs .tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      rOrd();
+    }
+    let eWF = 'all';
+    function fEW(w, el) {
+      eWF = w;
+      document.querySelectorAll('#e-w-tabs .tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      rE();
+    }
+    let fWF = 'all';
+    function fFW(w, el) {
+      fWF = w;
+      document.querySelectorAll('#f-w-tabs .tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      rF();
+    }
 
     async function rS() {
       const today = td(); document.getElementById('s-df').value = today;
       let sales = await D.g('sales');
-      if (sWF !== 'all') sales = sales.filter(s => s.worker_name === sWF || s.worker === sWF);
+      if (sWF !== 'all') sales = sales.filter(s => (s.worker_group === sWF || (!s.worker_group && s.worker_name === sWF)));
 
       const wa = new Date(); wa.setDate(wa.getDate() - 7); const ma = new Date(); ma.setMonth(ma.getMonth() - 1);
       document.getElementById('s-t').textContent = fmt(sales.filter(s => s.date === today || s.created_at?.startsWith(today)).reduce((a, b) => a + (b.amount || b.total_amount), 0));
@@ -2183,7 +2239,7 @@
     async function rST() {
       const df = document.getElementById('s-df')?.value;
       let sl = await D.g('sales');
-      if (sWF !== 'all') sl = sl.filter(s => s.worker_name === sWF || s.worker === sWF);
+      if (sWF !== 'all') sl = sl.filter(s => (s.worker_group === sWF || (!s.worker_group && s.worker_name === sWF)));
       if (df) sl = sl.filter(s => (s.date === df || s.created_at?.startsWith(df)));
       document.getElementById('s-tb').innerHTML = sl.map((s, i) => {
         const ts = s.created_at || '';
@@ -2192,18 +2248,23 @@
         const serviceText = s.service || s.service_name || 'Buyurtma';
         const pm = s.payment_method || s.payment || 'Karta';
         const pCl = pm === 'Naqd' ? 'pg' : 'pb';
-        return `<tr><td>${i + 1}</td><td>${datePart} ${timePart}</td><td><button class="btn btn-s bsm" style="padding:4px 8px;font-size:11px;" onclick="vO(${s.id}, '${serviceText}')">👁 Ko'rish</button></td><td>${s.client || s.client_name}</td><td>${s.worker_name || s.worker || '—'}</td><td><strong style="color:var(--success)">${fmt(s.amount || s.total_amount)}</strong></td><td><span class="pill ${pCl}">${pm}</span></td><td><button class="bi" onclick="dSl(${s.id})">🗑</button></td></tr>`;
+        const group = s.worker_group || (s.worker_name === 'Xodim 1' || s.worker_name === 'Xodim 2' ? s.worker_name : '');
+        const gCl = group === 'Xodim 1' ? 'pb' : (group === 'Xodim 2' ? 'py' : 'pg');
+        const workerDisplay = s.worker || s.worker_name || '—';
+        return `<tr><td>${i + 1}</td><td>${datePart} ${timePart}</td><td><button class="btn btn-s bsm" style="padding:4px 8px;font-size:11px;" onclick="vO(${s.id}, '${serviceText}')">👁 Ko'rish</button></td><td>${s.client || s.client_name}</td><td><strong>${workerDisplay}</strong>${group ? `<br><span class="pill ${gCl}" style="font-size:10px;">${group}</span>` : ''}</td><td><strong style="color:var(--success)">${fmt(s.amount || s.total_amount)}</strong></td><td><span class="pill ${pCl}">${pm}</span></td><td><button class="bi" onclick="dSl(${s.id})">🗑</button></td></tr>`;
       }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text3);">Savdolar yo\'q</td></tr>';
     }
     function os() { pSel();['sl-cl', 'sl-am', 'sl-nt'].forEach(id => document.getElementById(id).value = ''); om('modal-sale') }
     async function aS() {
       const am = gV('sl-am'); if (!am) { toast2('Summa kiriting!', 'e'); return }
       const wEl = document.getElementById('sl-wk');
+      const sEl = document.getElementById('sl-svc');
       const rec = {
         date: td(),
-        service: document.getElementById('sl-svc').value,
+        service: sEl.value,
         client: document.getElementById('sl-cl').value || "Noma'lum",
         worker: wEl.options[wEl.selectedIndex]?.text || '—',
+        group: sEl.options[sEl.selectedIndex]?.dataset.group || 'all',
         amount: am,
         payment: document.getElementById('sl-py').value,
         note: document.getElementById('sl-nt').value
@@ -2212,9 +2273,11 @@
     }
     async function dSl(id) { if (!confirm('O\'chirishni tasdiqlaysizmi?')) return; await fetch(`${API_URL}/orders/${id}`, { method: 'DELETE' }); await rST(); toast2('Savdo o\'chirildi', 'e') }
 
-    async function rEx() {
+    async function rE() {
       const today = td();
       let expRaw = await D.g('expenses');
+      if (eWF !== 'all') expRaw = expRaw.filter(e => e.worker_name === eWF); // Expenses already use worker_name as the group field
+
       const exp = expRaw.map(e => {
         const ts = e.created_at || '';
         const d = e.date || ts.split(' ')[0] || ts.split('T')[0] || '—';
@@ -2249,16 +2312,21 @@
         note: document.getElementById('ex-nt').value,
         worker_name: 'Admin'
       };
-      await D.s('expenses', rec); cm('modal-exp'); await rEx(); await rD(); toast2(fmt(am) + ' chiqim qo\'shildi!');
+      await D.s('expenses', rec); cm('modal-exp'); await rE(); await rD(); toast2(fmt(am) + ' chiqim qo\'shildi!');
     }
-    async function dEx(id) { if (!confirm('O\'chirishni tasdiqlaysizmi?')) return; await fetch(`${API_URL}/expenses/${id}`, { method: 'DELETE' }); await rEx(); toast2('Chiqim o\'chirildi', 'e') }
+    async function dEx(id) { if (!confirm('O\'chirishni tasdiqlaysizmi?')) return; await fetch(`${API_URL}/expenses/${id}`, { method: 'DELETE' }); await rE(); toast2('Chiqim o\'chirildi', 'e') }
 
     async function rF() {
       const period = document.getElementById('fp')?.value || 'month';
       const sales = await D.g('sales'); const exp = await D.g('expenses');
       let ff; if (period === 'day') ff = d => d === td(); else if (period === 'week') { const w = new Date(); w.setDate(w.getDate() - 7); ff = d => new Date(d) >= w } else if (period === 'month') { const m = new Date(); m.setMonth(m.getMonth() - 1); ff = d => new Date(d) >= m } else ff = () => true;
-      const fs = sales.filter(s => ff(s.date || s.created_at));
-      const fe = exp.filter(e => ff(e.date || e.created_at));
+      let fs = sales.filter(s => ff(s.date || s.created_at));
+      let fe = exp.filter(e => ff(e.date || e.created_at));
+      
+      if (fWF !== 'all') {
+        fs = fs.filter(s => (s.worker_group === fWF || (!s.worker_group && s.worker_name === fWF)));
+        fe = fe.filter(e => e.worker_name === fWF);
+      }
       const inc = fs.reduce((a, b) => a + (b.amount || b.total_amount), 0);
       const ex = fe.reduce((a, b) => a + b.amount, 0); const pr = inc - ex;
       document.getElementById('fi').textContent = fmt(inc); document.getElementById('fe').textContent = fmt(ex); document.getElementById('fp2').textContent = fmt(pr); document.getElementById('fp2').className = 'val ' + (pr >= 0 ? 'up' : 'down');
@@ -2341,13 +2409,32 @@
     }
 
     async function rOrd() {
-      pSel(); let ords = await D.g('orders'); if (oF !== 'all') ords = ords.filter(o => o.status === oF);
-      const stC = { pending: 'py', done: 'pg', 'in-progress': 'pb', cancelled: 'pr' }; const stT = { pending: '⏳ Kutilmoqda', done: '✅ Tugallandi', 'in-progress': '🔄 Jarayonda', cancelled: '❌ Bekor' };
+      pSel();
+      let ords = await D.g('orders');
+      if (oF !== 'all') ords = ords.filter(o => o.status === oF);
+      if (oWF !== 'all') ords = ords.filter(o => (o.worker_group === oWF || (!o.worker_group && o.worker_name === oWF)));
+
+      const stC = { pending: 'py', done: 'pg', 'in-progress': 'pb', cancelled: 'pr' };
+      const stT = { pending: '⏳ Kutilmoqda', done: '✅ Tugallandi', 'in-progress': '🔄 Jarayonda', cancelled: '❌ Bekor' };
+
       document.getElementById('o-tb').innerHTML = ords.map((o, i) => {
         const ts = o.created_at || '';
         const datePart = o.date || ts.split(' ')[0] || ts.split('T')[0] || '—';
         const serviceText = o.service || o.service_name || 'Buyurtma';
-        return `<tr><td>${i + 1}</td><td>${datePart}</td><td><strong>${o.client || o.client_name}</strong><br><small style="color:var(--text3)">${o.phone || o.client_phone || ''}</small></td><td><button class="btn btn-s bsm" style="padding:4px 8px;font-size:11px;" onclick="vO(${o.id}, '${serviceText}')">👁 Ko'rish</button></td><td>${o.worker || o.worker_name || '—'}</td><td><strong>${fmt(o.amount || o.total_amount)}</strong></td><td><select onchange="uOS(${o.id},this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 7px;border-radius:6px;font-size:11.5px;">${['pending', 'in-progress', 'done', 'cancelled'].map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${stT[s]}</option>`).join('')}</select></td><td><button class="bi" onclick="dOrd(${o.id})">🗑</button></td></tr>`;
+        const group = o.worker_group || (o.worker_name === 'Xodim 1' || o.worker_name === 'Xodim 2' ? o.worker_name : '');
+        const gCl = group === 'Xodim 1' ? 'pb' : (group === 'Xodim 2' ? 'py' : 'pg');
+        const workerDisplay = o.worker || o.worker_name || '—';
+
+        return `<tr>
+          <td>${i + 1}</td>
+          <td>${datePart}</td>
+          <td><strong>${o.client || o.client_name}</strong><br><small style="color:var(--text3)">${o.phone || o.client_phone || ''}</small></td>
+          <td><button class="btn btn-s bsm" style="padding:4px 8px;font-size:11px;" onclick="vO(${o.id}, '${serviceText}')">👁 Ko'rish</button></td>
+          <td><strong>${workerDisplay}</strong>${group ? `<br><span class="pill ${gCl}" style="font-size:10px;">${group}</span>` : ''}</td>
+          <td><strong>${fmt(o.amount || o.total_amount)}</strong></td>
+          <td><select onchange="uOS(${o.id},this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 7px;border-radius:6px;font-size:11.5px;">${['pending', 'in-progress', 'done', 'cancelled'].map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${stT[s]}</option>`).join('')}</select></td>
+          <td><button class="bi" onclick="dOrd(${o.id})">🗑</button></td>
+        </tr>`;
       }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text3);">Buyurtmalar yo\'q</td></tr>';
     }
     function fo(st, el) { oF = st; document.querySelectorAll('#o-tabs .tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); rOrd() }
@@ -2355,11 +2442,13 @@
     async function aO() {
       const cl = document.getElementById('om-cl').value.trim(); if (!cl) { toast2('Mijoz ismini kiriting!', 'e'); return }
       const wEl = document.getElementById('om-wk');
+      const sEl = document.getElementById('om-sv');
       const rec = {
         client_name: cl,
         client_phone: document.getElementById('om-ph').value,
-        service_name: document.getElementById('om-sv').value,
+        service_name: sEl.value,
         worker_name: wEl.options[wEl.selectedIndex]?.text || '—',
+        worker_group: sEl.options[sEl.selectedIndex]?.dataset.group || 'all',
         total_amount: gV('om-am'),
         status: document.getElementById('om-st').value,
         note: document.getElementById('om-nt').value
@@ -2551,7 +2640,11 @@
     }
 
     async function rDebts() {
-      const debts = await fetch(`${API_URL}/debts`).then(r => r.json());
+      const debts_raw = await fetch(`${API_URL}/debts`).then(r => r.json());
+      let debts = debts_raw;
+      if (dWF !== 'all') {
+        debts = debts_raw.filter(d => (d.worker_group === dWF || (!d.worker_group && d.worker_name === dWF)));
+      }
       document.getElementById('d-tb').innerHTML = debts.map((d, i) => `
         <tr>
           <td>${i+1}</td>
@@ -2563,7 +2656,7 @@
           <td>${fmt(d.total_amount)}</td>
           <td style="color:var(--success)">${fmt(d.paid_amount)}</td>
           <td style="color:var(--danger); font-weight:700;">${fmt(d.debt_amount)}</td>
-          <td style="font-size:12px;">${d.worker_name}</td>
+          <td style="font-size:12px;"><span class="pill ${d.worker_name === 'Xodim 1' ? 'pb' : (d.worker_name === 'Xodim 2' ? 'py' : 'pg')}">${d.worker_name}</span></td>
           <td><button class="bi" onclick="dDebt(${d.id})">🗑</button></td>
         </tr>
       `).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--text3);">Qarzdorlar yo\'q</td></tr>';

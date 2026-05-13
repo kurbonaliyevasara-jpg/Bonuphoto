@@ -34,6 +34,7 @@ db.serialize(() => {
       total_amount INTEGER NOT NULL,
       status TEXT DEFAULT 'pending',
       worker_name TEXT,
+      worker_group TEXT,
       service_name TEXT,
       note TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -138,7 +139,9 @@ db.serialize(() => {
   db.all("PRAGMA table_info(orders)", (err, rows) => {
     if (err || !rows) return;
     const hasPayment = rows.some(r => r.name === 'payment_method');
+    const hasGroup = rows.some(r => r.name === 'worker_group');
     if (!hasPayment) db.run("ALTER TABLE orders ADD COLUMN payment_method TEXT DEFAULT 'Karta'");
+    if (!hasGroup) db.run("ALTER TABLE orders ADD COLUMN worker_group TEXT");
   });
 
   // Debts table
@@ -153,6 +156,7 @@ db.serialize(() => {
       paid_amount INTEGER NOT NULL,
       debt_amount INTEGER NOT NULL,
       worker_name TEXT,
+      worker_group TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -161,8 +165,10 @@ db.serialize(() => {
     if (err || !rows) return;
     const hasService = rows.some(r => r.name === 'service_name');
     const hasPhone = rows.some(r => r.name === 'client_phone');
+    const hasGroup = rows.some(r => r.name === 'worker_group');
     if (!hasService) db.run("ALTER TABLE debts ADD COLUMN service_name TEXT");
     if (!hasPhone) db.run("ALTER TABLE debts ADD COLUMN client_phone TEXT");
+    if (!hasGroup) db.run("ALTER TABLE debts ADD COLUMN worker_group TEXT");
   });
 
   // Seed initial services if table is empty

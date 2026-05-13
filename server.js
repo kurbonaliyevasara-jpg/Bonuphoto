@@ -52,7 +52,7 @@ app.delete('/api/services/:id', (req, res) => {
 // --- ORDERS API ---
 app.post('/api/orders', (req, res) => {
   console.log('Incoming order:', req.body);
-  let { client_name, client_phone, total_amount, items, worker_name, service_name, note, status, payment_method } = req.body;
+  let { client_name, client_phone, total_amount, items, worker_name, worker_group, service_name, note, status, payment_method } = req.body;
 
   if (!service_name && items && items.length) {
     service_name = items.map(i => i.name).join(', ');
@@ -62,8 +62,8 @@ app.post('/api/orders', (req, res) => {
   if (client_name === 'Staff Order') status = 'done';
 
   db.run(
-    "INSERT INTO orders (client_name, client_phone, total_amount, worker_name, service_name, note, status, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    [client_name, client_phone, total_amount, worker_name, service_name || 'Buyurtma', note, status || 'pending', payment_method || 'Karta'],
+    "INSERT INTO orders (client_name, client_phone, total_amount, worker_name, worker_group, service_name, note, status, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [client_name, client_phone, total_amount, worker_name, worker_group, service_name || 'Buyurtma', note, status || 'pending', payment_method || 'Karta'],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       const orderId = this.lastID;
@@ -185,10 +185,10 @@ app.get('/api/sales', (req, res) => {
 });
 
 app.post('/api/sales', (req, res) => {
-  const { client, worker, amount, service, note, payment } = req.body;
+  const { client, worker, group, amount, service, note, payment } = req.body;
   db.run(
-    "INSERT INTO orders (client_name, total_amount, worker_name, service_name, note, status, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    [client, amount, worker, service, note, 'done', payment || 'Karta'],
+    "INSERT INTO orders (client_name, total_amount, worker_name, worker_group, service_name, note, status, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    [client, amount, worker, group, service, note, 'done', payment || 'Karta'],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ id: this.lastID, success: true });
@@ -307,10 +307,10 @@ app.get('/api/debts', (req, res) => {
 
 app.post('/api/debts', (req, res) => {
   console.log('Debts POST Received:', req.body);
-  const { client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name } = req.body;
+  const { client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name, worker_group } = req.body;
   db.run(
-    "INSERT INTO debts (client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    [client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name],
+    "INSERT INTO debts (client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name, worker_group) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name, worker_group],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ id: this.lastID, success: true });

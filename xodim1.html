@@ -1112,6 +1112,7 @@
                     client_phone: '',
                     total_amount: total,
                     worker_name: 'Xodim 1',
+                    worker_group: 'Xodim 1',
                     payment_method: payMethod,
                     items: cart.map(item => ({
                         id: item.id,
@@ -1380,7 +1381,8 @@
                         total_amount: total,
                         paid_amount: paid,
                         debt_amount: rem,
-                        worker_name: 'Xodim 1'
+                        worker_name: 'Xodim 1',
+                        worker_group: 'Xodim 1'
                     })
                 });
                 if (res.ok) {
