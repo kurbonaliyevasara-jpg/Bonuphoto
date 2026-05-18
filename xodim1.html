@@ -1303,13 +1303,14 @@
             try {
                 const res = await fetch(`${API_URL}/debts`);
                 const allDebts = await res.json();
+                const myDebts = allDebts.filter(d => d.worker_name === 'Xodim 1');
                 
-                if (allDebts.length === 0) {
+                if (myDebts.length === 0) {
                     historyDiv.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Qarzlar yo\'q</div>';
                     return;
                 }
 
-                historyDiv.innerHTML = allDebts.slice(0, 20).map(d => {
+                historyDiv.innerHTML = myDebts.slice(0, 20).map(d => {
                     const date = d.created_at ? d.created_at.split(' ')[0] : '—';
                     return `
                         <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px;">

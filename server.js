@@ -178,7 +178,7 @@ app.delete('/api/attendance/:id', (req, res) => {
 
 // --- SALES API ---
 app.get('/api/sales', (req, res) => {
-  db.all("SELECT * FROM orders ORDER BY created_at DESC", (err, rows) => {
+  db.all("SELECT *, datetime(created_at, '+5 hours') as created_at FROM orders ORDER BY created_at DESC", (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });

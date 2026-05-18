@@ -1190,14 +1190,14 @@
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <div class="g4">
-        <div class="card sc">
+        <div class="card sc" style="cursor:pointer;" onclick="showTodaySalesModal()">
           <div class="gl" style="background:var(--success)"></div>
           <div class="lbl">Bugungi savdo</div>
           <div class="val up" id="d-s">0 so'm</div>
           <div class="chg up">↑ Ijobiy</div>
           <div class="ib">💰</div>
         </div>
-        <div class="card sc">
+        <div class="card sc" style="cursor:pointer;" onclick="showTodayExpensesModal()">
           <div class="gl" style="background:var(--danger)"></div>
           <div class="lbl">Bugungi chiqim</div>
           <div class="val down" id="d-e">0 so'm</div>
@@ -1771,6 +1771,59 @@
     </div>
   </div>
 
+  <!-- Today's Sales Details Modal -->
+  <div class="mo" id="modal-today-sales">
+    <div class="md" style="width: 750px; max-width: 95vw;">
+      <div class="mh">
+        <div class="mt">💰 Bugungi savdolar tafsiloti</div>
+        <button class="mc" onclick="cm('modal-today-sales')">✕</button>
+      </div>
+      <div class="tw" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th style="width: 70px;">Vaqt</th>
+              <th>Xizmat turi</th>
+              <th>Mijoz</th>
+              <th>Xodim / Admin</th>
+              <th style="width: 90px;">To'lov</th>
+              <th style="text-align: right; width: 120px;">Summa</th>
+            </tr>
+          </thead>
+          <tbody id="today-sales-tb"></tbody>
+        </table>
+      </div>
+      <div id="today-sales-total" style="background:var(--bg3); padding: 15px; border-radius: 12px; border: 1px solid var(--border);"></div>
+    </div>
+  </div>
+
+  <!-- Today's Expenses Details Modal -->
+  <div class="mo" id="modal-today-expenses">
+    <div class="md" style="width: 750px; max-width: 95vw;">
+      <div class="mh">
+        <div class="mt">📤 Bugungi chiqimlar tafsiloti</div>
+        <button class="mc" onclick="cm('modal-today-expenses')">✕</button>
+      </div>
+      <div class="tw" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th style="width: 70px;">Vaqt</th>
+              <th>Kategoriya</th>
+              <th>Izoh</th>
+              <th>Kim tomondan</th>
+              <th style="text-align: right; width: 120px;">Summa</th>
+            </tr>
+          </thead>
+          <tbody id="today-expenses-tb"></tbody>
+        </table>
+      </div>
+      <div id="today-expenses-total" style="background:var(--bg3); padding: 15px; border-radius: 12px; border: 1px solid var(--border);"></div>
+    </div>
+  </div>
+
   <div class="mo" id="modal-sale">
     <div class="md">
       <div class="mh">
@@ -2010,10 +2063,100 @@
       return parseInt(el.value.replace(/\s/g, '')) || 0;
     };
     const fmt = n => n ? String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so'm" : "0 so'm";
-    const td = () => new Date().toISOString().split('T')[0];
+    const td = () => {
+      const tzOffset = 5 * 60 * 60 * 1000;
+      return new Date(Date.now() + tzOffset).toISOString().split('T')[0];
+    };
     function toast2(msg, t = 's') { const el = document.getElementById('toast-el'); el.textContent = (t === 's' ? '✅ ' : t === 'e' ? '❌ ' : 'ℹ️ ') + msg; el.style.borderLeft = '3px solid ' + (t === 's' ? 'var(--success)' : t === 'e' ? 'var(--danger)' : 'var(--primary)'); el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
     function cm(id) { document.getElementById(id).classList.remove('open') }
     function om(id) { document.getElementById(id).classList.add('open') }
+
+    async function showTodaySalesModal() {
+      const today = td();
+      const sales = await D.g('sales');
+      // Filter today's sales
+      const todaySales = sales.filter(s => (s.date === today || s.created_at?.startsWith(today)));
+      
+      const tbody = document.getElementById('today-sales-tb');
+      if (todaySales.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px;">Bugun savdo qilinmagan</td></tr>`;
+      } else {
+        tbody.innerHTML = todaySales.map((s, i) => {
+          const ts = s.created_at || '';
+          const timePart = s.time || ts.split(' ')[1]?.slice(0, 5) || ts.split('T')[1]?.slice(0, 5) || '—';
+          const serviceText = s.service || s.service_name || 'Buyurtma';
+          const pm = s.payment_method || s.payment || 'Karta';
+          const pCl = pm === 'Naqd' ? 'pg' : 'pb';
+          const workerDisplay = s.worker || s.worker_name || '—';
+          return `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${timePart}</td>
+              <td style="font-weight:600;">${serviceText}</td>
+              <td>${s.client || s.client_name || "Noma'lum"}</td>
+              <td><strong>${workerDisplay}</strong></td>
+              <td><span class="pill ${pCl}">${pm}</span></td>
+              <td style="color:var(--success);font-weight:700;text-align:right;">${fmt(s.amount || s.total_amount)}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+      
+      // Calculate totals
+      const totalSum = todaySales.reduce((a, b) => a + (b.amount || b.total_amount), 0);
+      const cashSum = todaySales.filter(s => (s.payment_method || s.payment) === 'Naqd').reduce((a, b) => a + (b.amount || b.total_amount), 0);
+      const cardSum = totalSum - cashSum;
+      
+      document.getElementById('today-sales-total').innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:13px; color:var(--text3);">
+          <span>Naqd: <strong style="color:var(--success);">${fmt(cashSum)}</strong></span>
+          <span>Karta: <strong style="color:var(--primary-light);">${fmt(cardSum)}</strong></span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:700; border-top:1px solid var(--border); padding-top:8px; margin-top:8px;">
+          <span>Jami bugun:</span>
+          <span style="color:var(--success); font-size:16px;">${fmt(totalSum)}</span>
+        </div>
+      `;
+      
+      om('modal-today-sales');
+    }
+
+    async function showTodayExpensesModal() {
+      const today = td();
+      const expRaw = await D.g('expenses');
+      const todayExpenses = expRaw.filter(e => (e.date === today || e.created_at?.startsWith(today)));
+      
+      const tbody = document.getElementById('today-expenses-tb');
+      if (todayExpenses.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px;">Bugun chiqim qilinmagan</td></tr>`;
+      } else {
+        tbody.innerHTML = todayExpenses.map((e, i) => {
+          const ts = e.created_at || '';
+          const timePart = e.time || ts.split(' ')[1]?.slice(0, 5) || ts.split('T')[1]?.slice(0, 5) || '—';
+          return `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${timePart}</td>
+              <td style="font-weight:600;color:var(--danger);">${e.category}</td>
+              <td>${e.note || '—'}</td>
+              <td><strong>${e.worker_name || 'Admin'}</strong></td>
+              <td style="color:var(--danger);font-weight:700;text-align:right;">${fmt(e.amount)}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+      
+      const totalSum = todayExpenses.reduce((a, b) => a + b.amount, 0);
+      document.getElementById('today-expenses-total').innerHTML = `
+        <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:700; border-top:1px solid var(--border); padding-top:8px;">
+          <span>Jami bugun:</span>
+          <span style="color:var(--danger); font-size:16px;">${fmt(totalSum)}</span>
+        </div>
+      `;
+      
+      om('modal-today-expenses');
+    }
+
     document.querySelectorAll('.mo').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open') }));
 
     const ptitles = { dashboard: '📊 Bosh sahifa', attendance: '🕐 Davomat', workers: '👥 Xodimlar', sales: '💰 Savdo', expenses: '📤 Chiqimlar', finance: '📈 Moliya hisoboti', orders: '📋 Buyurtmalar', services: '🎨 Xizmat turlari', clients: '🙍 Mijozlar', reports: '📑 Kunlik hisobot', settings: '⚙️ Sozlamalar', debts: '💸 Qarzdor Mijozlar' };
@@ -2039,6 +2182,18 @@
       const tdd = document.getElementById('td'); if (tdd) tdd.textContent = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
     }
     setInterval(updateClock, 1000); updateClock();
+
+    // Auto-refresh dashboard data every 5 seconds to keep it live without manual page reloads
+    setInterval(async () => {
+      const activePage = document.querySelector('.page.active');
+      if (activePage && activePage.id === 'page-dashboard') {
+        try {
+          await rD();
+        } catch (e) {
+          console.error("Auto-refresh error:", e);
+        }
+      }
+    }, 5000);
 
     async function rD() {
       const today = td();
