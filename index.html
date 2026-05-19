@@ -2023,7 +2023,17 @@
       async g(k) {
         try {
           const res = await fetch(`${API_URL}/${k}`);
-          return await res.json();
+          const data = await res.json();
+          if (k === 'expenses' && Array.isArray(data)) {
+            data.forEach(e => {
+              if (e.created_at) {
+                const parts = e.created_at.split(/[ T]/);
+                if (parts[0]) e.date = parts[0];
+                if (parts[1]) e.time = parts[1].slice(0, 5);
+              }
+            });
+          }
+          return data;
         } catch (e) {
           console.error('API Error:', e);
           return [];
