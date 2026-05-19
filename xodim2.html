@@ -1056,8 +1056,16 @@
 
             document.getElementById('productSearch').addEventListener('input', updateUI);
 
+            // Checkout
+            let isCheckingOut = false;
             document.getElementById('checkoutBtn').addEventListener('click', async () => {
-                if (cart.length === 0) return;
+                if (cart.length === 0 || isCheckingOut) return;
+
+                isCheckingOut = true;
+                const btn = document.getElementById('checkoutBtn');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = 'Tasdiqlanmoqda...';
 
                 const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
                 const payMethod = document.querySelector('.pay-btn.active').dataset.pay;
@@ -1089,6 +1097,10 @@
                     }
                 } catch (e) {
                     alert('Xatolik yuz berdi!');
+                } finally {
+                    isCheckingOut = false;
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
                 }
             });
         }
@@ -1172,12 +1184,22 @@
             fetchExpenseHistory();
         }
         function closeExpenseModal() { document.getElementById('expenseModal').style.display = 'none'; }
+        let isSavingExpense = false;
         async function submitExpense() {
+            if (isSavingExpense) return;
             const cat = document.getElementById('expCategory').value;
             const amRaw = document.getElementById('expAmount').value;
             const am = amRaw.replace(/\s/g, '');
             const nt = document.getElementById('expNote').value;
             if(!am) return alert('Summani kiriting!');
+            
+            isSavingExpense = true;
+            const btn = document.querySelector('#expenseModal button[onclick="submitExpense()"]');
+            const originalText = btn ? btn.innerText : 'Tasdiqlash';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Saqlanmoqda...';
+            }
             try {
                 const res = await fetch(`${API_URL}/expenses`, {
                     method: 'POST',
@@ -1191,7 +1213,7 @@
                     overlay.querySelector('h2').innerText = 'Chiqim saqlandi!';
                     overlay.querySelector('p').innerText = 'Xarajat muvaffaqiyatli ro\'yxatga olindi.';
                     overlay.classList.add('active');
-
+ 
                     document.getElementById('expAmount').value = '';
                     document.getElementById('expNote').value = '';
                     fetchExpenseHistory();
@@ -1202,6 +1224,12 @@
             } catch(e) { 
                 console.error(e);
                 alert('Serverga ulanishda xatolik!');
+            } finally {
+                isSavingExpense = false;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
             }
         }
 
@@ -1283,7 +1311,9 @@
                 }
             } catch(e) { console.error(e); }
         }
+        let isSavingDebt = false;
         async function submitDebt() {
+            if (isSavingDebt) return;
             const name = document.getElementById('debtClient').value.trim();
             const phone = document.getElementById('debtPhone').value.trim();
             const service = document.getElementById('debtService').value.trim();
@@ -1291,9 +1321,16 @@
             const total = parseInt(document.getElementById('debtTotal').value.replace(/\s/g, '')) || 0;
             const paid = parseInt(document.getElementById('debtPaid').value.replace(/\s/g, '')) || 0;
             const rem = total - paid;
-
+  
             if(!name || !total) return alert('Mijoz ismi va jami summani kiriting!');
-
+  
+            isSavingDebt = true;
+            const btn = document.querySelector('#debtModal button[onclick="submitDebt()"]');
+            const originalText = btn ? btn.innerText : 'Saqlash';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Saqlanmoqda...';
+            }
             try {
                 const res = await fetch(`${API_URL}/debts`, {
                     method: 'POST',
@@ -1328,6 +1365,12 @@
             } catch(e) { 
                 console.error(e);
                 alert('Serverga ulanishda xatolik!');
+            } finally {
+                isSavingDebt = false;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
             }
         }
 

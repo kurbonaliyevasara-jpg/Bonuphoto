@@ -1682,6 +1682,7 @@
                   <th>Vaqt</th>
                   <th>Xizmat</th>
                   <th>Mijoz</th>
+                  <th>Xodim</th>
                   <th>Summa</th>
                 </tr>
               </thead>
@@ -2486,9 +2487,9 @@
       const ex = fe.reduce((a, b) => a + b.amount, 0); const pr = inc - ex;
       document.getElementById('fi').textContent = fmt(inc); document.getElementById('fe').textContent = fmt(ex); document.getElementById('fp2').textContent = fmt(pr); document.getElementById('fp2').className = 'val ' + (pr >= 0 ? 'up' : 'down');
       const fc = document.getElementById('fc'); fc.innerHTML = ''; const days7 = []; for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days7.push(d.toISOString().split('T')[0]) }
-      const mx = Math.max(...days7.map(d => Math.max(sales.filter(s => (s.date === d || s.created_at?.startsWith(d))).reduce((a, b) => a + (b.amount || b.total_amount), 0), exp.filter(e => e.date === d).reduce((a, b) => a + b.amount, 0))), 1);
+      const mx = Math.max(...days7.map(d => Math.max(sales.filter(s => (s.date === d || s.created_at?.startsWith(d))).reduce((a, b) => a + (b.amount || b.total_amount), 0), exp.filter(e => (e.date === d || e.created_at?.startsWith(d))).reduce((a, b) => a + b.amount, 0))), 1);
       const dnames = ['Ya', 'Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh'];
-      days7.forEach(d => { const dd = new Date(d); const sv = sales.filter(x => (x.date === d || x.created_at?.startsWith(d))).reduce((a, b) => a + (b.amount || b.total_amount), 0); const ex = exp.filter(x => x.date === d).reduce((a, b) => a + b.amount, 0); const hs = Math.max(6, Math.round((sv / mx) * 150)); const he = Math.max(6, Math.round((ex / mx) * 150)); fc.innerHTML += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="display:flex;align-items:flex-end;gap:3px;height:158px;"><div style="width:14px;border-radius:4px 4px 0 0;height:${hs}px;background:linear-gradient(180deg,var(--success),rgba(16,185,129,.3))" title="${fmt(sv)}"></div><div style="width:14px;border-radius:4px 4px 0 0;height:${he}px;background:linear-gradient(180deg,var(--danger),rgba(239,68,68,.3))" title="${fmt(ex)}"></div></div><div style="font-size:10px;color:var(--text3)">${dnames[dd.getDay()]}</div></div>` });
+      days7.forEach(d => { const dd = new Date(d); const sv = sales.filter(x => (x.date === d || x.created_at?.startsWith(d))).reduce((a, b) => a + (b.amount || b.total_amount), 0); const ex = exp.filter(x => (x.date === d || x.created_at?.startsWith(d))).reduce((a, b) => a + b.amount, 0); const hs = Math.max(6, Math.round((sv / mx) * 150)); const he = Math.max(6, Math.round((ex / mx) * 150)); fc.innerHTML += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="display:flex;align-items:flex-end;gap:3px;height:158px;"><div style="width:14px;border-radius:4px 4px 0 0;height:${hs}px;background:linear-gradient(180deg,var(--success),rgba(16,185,129,.3))" title="${fmt(sv)}"></div><div style="width:14px;border-radius:4px 4px 0 0;height:${he}px;background:linear-gradient(180deg,var(--danger),rgba(239,68,68,.3))" title="${fmt(ex)}"></div></div><div style="font-size:10px;color:var(--text3)">${dnames[dd.getDay()]}</div></div>` });
       fc.innerHTML += `<div style="display:flex;gap:14px;align-self:flex-end;padding:0 0 18px 18px;font-size:11.5px;color:var(--text3);"><span>🟢 Kirim</span><span>🔴 Chiqim</span></div>`;
       const tot = inc || 1; const sb = {}; fs.forEach(s => { const name = s.service || 'Buyurtma'; sb[name] = (sb[name] || 0) + (s.amount || s.total_amount) });
       const wb = {}; fs.forEach(s => { const name = s.worker || s.worker_name || '—'; wb[name] = (wb[name] || 0) + (s.amount || s.total_amount) });
@@ -2764,12 +2765,26 @@
       const el = document.getElementById('r-d'); if (!el.value) el.value = td(); const date = el.value;
       const allSales = await D.g('sales');
       const sales = allSales.filter(s => (s.date === date || s.created_at?.startsWith(date)));
-      const exp = (await D.g('expenses')).filter(e => e.date === date);
+      const exp = (await D.g('expenses')).filter(e => (e.date === date || e.created_at?.startsWith(date)));
       const att = (await D.g('attendance')).filter(a => a.date === date);
       const ts = sales.reduce((a, b) => a + (b.amount || b.total_amount), 0); const te = exp.reduce((a, b) => a + b.amount, 0); const pr = ts - te; const sMap = { came: '✅ Keldi', late: '⏰ Kech', absent: '❌ Kelmadi', sick: '🤒 Kasal', vacation: "🏖 Ta'til" };
       const allOrds = await D.g('orders');
       document.getElementById('r-stats').innerHTML = `<div class="card sc"><div class="lbl">Savdo</div><div class="val up">${fmt(ts)}</div><div class="ib">💰</div></div><div class="card sc"><div class="lbl">Chiqim</div><div class="val down">${fmt(te)}</div><div class="ib">📤</div></div><div class="card sc"><div class="lbl">Foyda</div><div class="val ${pr >= 0 ? 'up' : 'down'}">${fmt(pr)}</div><div class="ib">📊</div></div><div class="card sc"><div class="lbl">Buyurtmalar</div><div class="val" style="color:var(--info)">${allOrds.filter(o => o.created_at?.startsWith(date)).length}</div><div class="ib">📋</div></div>`;
-      document.getElementById('r-s').innerHTML = sales.map(s => { const ts2 = s.created_at || ''; const tPart = s.time || ts2.split(' ')[1]?.slice(0, 5) || ts2.split('T')[1]?.slice(0, 5) || '—'; return `<tr><td>${tPart}</td><td>${s.service || s.service_name || 'Buyurtma'}</td><td>${s.client || s.client_name || '—'}</td><td><strong style="color:var(--success)">${fmt(s.amount || s.total_amount)}</strong></td></tr>` }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);">Savdo yo\'q</td></tr>';
+      document.getElementById('r-s').innerHTML = sales.map(s => {
+        const ts2 = s.created_at || '';
+        const tPart = s.time || ts2.split(' ')[1]?.slice(0, 5) || ts2.split('T')[1]?.slice(0, 5) || '—';
+        const group = s.worker_group || (s.worker_name === 'Xodim 1' || s.worker_name === 'Xodim 2' ? s.worker_name : '');
+        const gCl = group === 'Xodim 1' ? 'pb' : (group === 'Xodim 2' ? 'py' : 'pg');
+        const workerDisplay = s.worker || s.worker_name || '—';
+        const badge = group ? `<br><span class="pill ${gCl}" style="font-size:10px; padding:2px 6px;">${group}</span>` : '';
+        return `<tr>
+          <td>${tPart}</td>
+          <td>${s.service || s.service_name || 'Buyurtma'}</td>
+          <td>${s.client || s.client_name || '—'}</td>
+          <td><strong>${workerDisplay}</strong>${badge}</td>
+          <td><strong style="color:var(--success)">${fmt(s.amount || s.total_amount)}</strong></td>
+        </tr>`
+      }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);">Savdo yo\'q</td></tr>';
       document.getElementById('r-e').innerHTML = exp.map(e => `<tr><td>${e.time || '—'}</td><td>${e.category}</td><td>${e.note || '—'}</td><td><strong style="color:var(--danger)">${fmt(e.amount)}</strong></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);">Chiqim yo\'q</td></tr>';
       document.getElementById('r-a').innerHTML = att.map(a => `<div style="display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--border);font-size:12.5px;"><span style="color:var(--text2)">${a.workerName}</span><span>${sMap[a.status] || a.status}</span><span style="color:var(--text3)">${a.timeIn || '—'}</span></div>`).join('') || '<div style="color:var(--text3);font-size:13px;text-align:center;padding:9px;">Davomat belgilanmagan</div>';
     }
