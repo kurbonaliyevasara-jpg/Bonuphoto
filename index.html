@@ -1668,8 +1668,15 @@
     <!-- REPORTS -->
     <div class="page" id="page-reports">
       <div class="sh">
-        <div class="st">📑 Kunlik hisobot</div><input type="date" class="fi" id="r-d" style="width:auto;"
-          onchange="rR()">
+        <div style="display:flex;align-items:center;gap:15px;">
+          <div class="st">📑 Kunlik hisobot</div>
+          <div class="tabs" id="r-w-tabs" style="margin-bottom:0; padding:3px; font-size:12px;">
+            <div class="tab active" onclick="fRW('all', this)">Umumiy</div>
+            <div class="tab" onclick="fRW('Xodim 1', this)">1-Xodimlar</div>
+            <div class="tab" onclick="fRW('Xodim 2', this)">2-Xodimlar</div>
+          </div>
+        </div>
+        <input type="date" class="fi" id="r-d" style="width:auto;" onchange="rR()">
       </div>
       <div class="g4" id="r-stats" style="margin-bottom:22px;"></div>
       <div class="g2">
@@ -2390,6 +2397,13 @@
       el.classList.add('active');
       rF();
     }
+    let rWF = 'all';
+    function fRW(w, el) {
+      rWF = w;
+      document.querySelectorAll('#r-w-tabs .tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      rR();
+    }
 
     async function rS() {
       const today = td(); document.getElementById('s-df').value = today;
@@ -2774,12 +2788,30 @@
     async function rR() {
       const el = document.getElementById('r-d'); if (!el.value) el.value = td(); const date = el.value;
       const allSales = await D.g('sales');
-      const sales = allSales.filter(s => (s.date === date || s.created_at?.startsWith(date)));
-      const exp = (await D.g('expenses')).filter(e => (e.date === date || e.created_at?.startsWith(date)));
-      const att = (await D.g('attendance')).filter(a => a.date === date);
-      const ts = sales.reduce((a, b) => a + (b.amount || b.total_amount), 0); const te = exp.reduce((a, b) => a + b.amount, 0); const pr = ts - te; const sMap = { came: '✅ Keldi', late: '⏰ Kech', absent: '❌ Kelmadi', sick: '🤒 Kasal', vacation: "🏖 Ta'til" };
+      let sales = allSales.filter(s => (s.date === date || s.created_at?.startsWith(date)));
+      const allExp = await D.g('expenses');
+      let exp = allExp.filter(e => (e.date === date || e.created_at?.startsWith(date)));
+      const allAtt = await D.g('attendance');
+      let att = allAtt.filter(a => a.date === date);
+
+      if (rWF !== 'all') {
+        sales = sales.filter(s => (s.worker_group === rWF || (!s.worker_group && s.worker_name === rWF)));
+        exp = exp.filter(e => e.worker_name === rWF);
+        att = att.filter(a => (a.workerName === rWF || (a.workerName && a.workerName.includes(rWF))));
+      }
+
+      const ts = sales.reduce((a, b) => a + (b.amount || b.total_amount), 0);
+      const te = exp.reduce((a, b) => a + b.amount, 0);
+      const pr = ts - te;
+      const sMap = { came: '✅ Keldi', late: '⏰ Kech', absent: '❌ Kelmadi', sick: '🤒 Kasal', vacation: "🏖 Ta'til" };
       const allOrds = await D.g('orders');
-      document.getElementById('r-stats').innerHTML = `<div class="card sc"><div class="lbl">Savdo</div><div class="val up">${fmt(ts)}</div><div class="ib">💰</div></div><div class="card sc"><div class="lbl">Chiqim</div><div class="val down">${fmt(te)}</div><div class="ib">📤</div></div><div class="card sc"><div class="lbl">Foyda</div><div class="val ${pr >= 0 ? 'up' : 'down'}">${fmt(pr)}</div><div class="ib">📊</div></div><div class="card sc"><div class="lbl">Buyurtmalar</div><div class="val" style="color:var(--info)">${allOrds.filter(o => o.created_at?.startsWith(date)).length}</div><div class="ib">📋</div></div>`;
+      let ords = allOrds.filter(o => o.created_at?.startsWith(date));
+      if (rWF !== 'all') {
+        ords = ords.filter(o => (o.worker_group === rWF || (!o.worker_group && o.worker_name === rWF)));
+      }
+
+      document.getElementById('r-stats').innerHTML = `<div class="card sc"><div class="lbl">Savdo</div><div class="val up">${fmt(ts)}</div><div class="ib">💰</div></div><div class="card sc"><div class="lbl">Chiqim</div><div class="val down">${fmt(te)}</div><div class="ib">📤</div></div><div class="card sc"><div class="lbl">Foyda</div><div class="val ${pr >= 0 ? 'up' : 'down'}">${fmt(pr)}</div><div class="ib">📊</div></div><div class="card sc"><div class="lbl">Buyurtmalar</div><div class="val" style="color:var(--info)">${ords.length}</div><div class="ib">📋</div></div>`;
+
       document.getElementById('r-s').innerHTML = sales.map(s => {
         const ts2 = s.created_at || '';
         const tPart = s.time || ts2.split(' ')[1]?.slice(0, 5) || ts2.split('T')[1]?.slice(0, 5) || '—';
@@ -2795,7 +2827,17 @@
           <td><strong style="color:var(--success)">${fmt(s.amount || s.total_amount)}</strong></td>
         </tr>`
       }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);">Savdo yo\'q</td></tr>';
-      document.getElementById('r-e').innerHTML = exp.map(e => `<tr><td>${e.time || '—'}</td><td>${e.category}</td><td>${e.note || '—'}</td><td><strong style="color:var(--danger)">${fmt(e.amount)}</strong></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);">Chiqim yo\'q</td></tr>';
+
+      document.getElementById('r-e').innerHTML = exp.map(e => {
+        const badge = `<span class="pill ${e.worker_name === 'Xodim 1' ? 'pb' : (e.worker_name === 'Xodim 2' ? 'py' : 'pg')}" style="font-size:10px; padding:2px 6px; margin-left:8px;">${e.worker_name || 'Admin'}</span>`;
+        return `<tr>
+          <td>${e.time || '—'}</td>
+          <td>${e.category}${badge}</td>
+          <td>${e.note || '—'}</td>
+          <td><strong style="color:var(--danger)">${fmt(e.amount)}</strong></td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);">Chiqim yo\'q</td></tr>';
+
       document.getElementById('r-a').innerHTML = att.map(a => `<div style="display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--border);font-size:12.5px;"><span style="color:var(--text2)">${a.workerName}</span><span>${sMap[a.status] || a.status}</span><span style="color:var(--text3)">${a.timeIn || '—'}</span></div>`).join('') || '<div style="color:var(--text3);font-size:13px;text-align:center;padding:9px;">Davomat belgilanmagan</div>';
     }
 
