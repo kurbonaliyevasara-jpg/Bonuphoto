@@ -266,34 +266,86 @@ app.delete('/api/expenses/:id', (req, res) => {
 
 // --- SALARIES API ---
 app.get('/api/salaries', (req, res) => {
-  db.all("SELECT * FROM salary_payments", (err, rows) => {
+  db.all(
+    "SELECT sp.*, COALESCE(sp.worker_name, w.name, '—') as worker_name, datetime(sp.paid_at, '+5 hours') as paid_at_formatted FROM salary_payments sp LEFT JOIN workers w ON sp.worker_id = w.id ORDER BY sp.paid_at DESC, sp.id DESC",
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows.map(r => ({
+        ...r,
+        paid_at: r.paid_at_formatted || r.paid_at
+      })));
+    }
+  );
+});
+
+app.post('/api/salaries', (req, res) => {
+  const { worker_id, worker_name, amount, month, paid_at, note, mark_closed } = req.body;
+  const numAmount = parseInt(amount) || 0;
+  
+  db.serialize(() => {
+    let sql = "INSERT INTO salary_payments (worker_id, worker_name, amount, month, note) VALUES (?, ?, ?, ?, ?)";
+    let params = [worker_id, worker_name, numAmount, month, note || ''];
+
+    if (paid_at) {
+      sql = "INSERT INTO salary_payments (worker_id, worker_name, amount, month, note, paid_at) VALUES (?, ?, ?, ?, ?, ?)";
+      const timePart = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Tashkent' });
+      params = [worker_id, worker_name, numAmount, month, note || '', `${paid_at} ${timePart}`];
+    }
+
+    db.run(sql, params, function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      const salaryId = this.lastID;
+      
+      const expNote = `${worker_name} uchun ${month} oyligi` + (note ? ` (${note})` : '');
+      db.run(
+        "INSERT INTO expenses (category, amount, note, worker_name) VALUES (?, ?, ?, ?)",
+        ['Oylik', numAmount, expNote, worker_name || 'Admin'],
+        (err2) => {
+          if (err2) console.error("Expense error:", err2.message);
+
+          if (mark_closed) {
+            db.run(
+              "INSERT OR REPLACE INTO salary_closures (worker_id, month) VALUES (?, ?)",
+              [worker_id, month],
+              () => res.json({ id: salaryId, success: true })
+            );
+          } else {
+            res.json({ id: salaryId, success: true });
+          }
+        }
+      );
+    });
+  });
+});
+
+app.delete('/api/salaries/:id', (req, res) => {
+  db.run("DELETE FROM salary_payments WHERE id = ?", [req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// --- SALARY CLOSURES API ---
+app.get('/api/salaries/closures', (req, res) => {
+  db.all("SELECT * FROM salary_closures", (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
 });
 
-app.post('/api/salaries', (req, res) => {
-  const { worker_id, amount, month, worker_name } = req.body;
-  
-  db.serialize(() => {
-    // 1. Oylik to'lovini saqlash
-    db.run(
-      "INSERT INTO salary_payments (worker_id, amount, month) VALUES (?, ?, ?)",
-      [worker_id, amount, month],
-      function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        
-        // 2. Harajatlarga (expenses) ham qo'shish
-        db.run(
-          "INSERT INTO expenses (category, amount, note) VALUES (?, ?, ?)",
-          ['Oylik', amount, `${worker_name} uchun ${month} oyligi`],
-          (err2) => {
-            if (err2) console.error("Expense error:", err2.message);
-            res.json({ id: this.lastID, success: true });
-          }
-        );
-      }
-    );
+app.post('/api/salaries/close', (req, res) => {
+  const { worker_id, month } = req.body;
+  db.run("INSERT OR REPLACE INTO salary_closures (worker_id, month) VALUES (?, ?)", [worker_id, month], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+app.post('/api/salaries/unclose', (req, res) => {
+  const { worker_id, month } = req.body;
+  db.run("DELETE FROM salary_closures WHERE worker_id = ? AND month = ?", [worker_id, month], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
   });
 });
 
@@ -308,34 +360,72 @@ app.get('/api/debts', (req, res) => {
 app.post('/api/debts', (req, res) => {
   console.log('Debts POST Received:', req.body);
   const { client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name, worker_group } = req.body;
-  db.run(
-    "INSERT INTO debts (client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name, worker_group) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    [client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name, worker_group],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID, success: true });
-    }
-  );
+  const numPaid = parseInt(paid_amount) || 0;
+
+  db.serialize(() => {
+    db.run(
+      "INSERT INTO debts (client_name, client_phone, service_name, items_count, total_amount, paid_amount, debt_amount, worker_name, worker_group) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [client_name, client_phone, service_name, items_count, total_amount, numPaid, debt_amount, worker_name, worker_group],
+      function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        const debtId = this.lastID;
+
+        // If upfront payment was made (> 0), record it as a sale for today in orders table
+        if (numPaid > 0) {
+          const orderNote = `Katta buyurtma (Boshlang'ich to'lov) - ${client_name}`;
+          const orderSvc = `${service_name || 'Katta buyurtma'} (${items_count || 1} ta)`;
+          db.run(
+            "INSERT INTO orders (client_name, client_phone, total_amount, worker_name, worker_group, service_name, note, status, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, 'done', 'Karta')",
+            [client_name, client_phone || '', numPaid, worker_name || 'Admin', worker_group || worker_name || 'Admin', orderSvc, orderNote],
+            (err2) => {
+              if (err2) console.error("Error creating sales entry for upfront debt payment:", err2.message);
+              res.json({ id: debtId, success: true });
+            }
+          );
+        } else {
+          res.json({ id: debtId, success: true });
+        }
+      }
+    );
+  });
 });
 
 app.patch('/api/debts/:id/pay', (req, res) => {
   const { amount } = req.body;
   const id = req.params.id;
+  const payAmount = parseInt(amount) || 0;
   
-  db.get("SELECT total_amount, paid_amount FROM debts WHERE id = ?", [id], (err, row) => {
+  db.get("SELECT * FROM debts WHERE id = ?", [id], (err, row) => {
     if (err || !row) return res.status(500).json({ error: 'Topilmadi' });
     
-    const newPaid = row.paid_amount + parseInt(amount);
+    const newPaid = row.paid_amount + payAmount;
     const newDebt = row.total_amount - newPaid;
     
-    db.run(
-      "UPDATE debts SET paid_amount = ?, debt_amount = ? WHERE id = ?",
-      [newPaid, newDebt, id],
-      function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true, newPaid, newDebt });
-      }
-    );
+    db.serialize(() => {
+      db.run(
+        "UPDATE debts SET paid_amount = ?, debt_amount = ? WHERE id = ?",
+        [newPaid, newDebt, id],
+        function(err) {
+          if (err) return res.status(500).json({ error: err.message });
+
+          // Record this debt repayment as a sale on the DAY IT WAS PAID in orders table
+          if (payAmount > 0) {
+            const orderNote = `Qarz to'lovi - ${row.client_name}`;
+            const orderSvc = `${row.service_name || 'Katta buyurtma'} (Qarz to'lovi)`;
+            db.run(
+              "INSERT INTO orders (client_name, client_phone, total_amount, worker_name, worker_group, service_name, note, status, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, 'done', 'Karta')",
+              [row.client_name, row.client_phone || '', payAmount, row.worker_name || 'Admin', row.worker_group || row.worker_name || 'Admin', orderSvc, orderNote],
+              (err2) => {
+                if (err2) console.error("Error creating sales entry for debt repayment:", err2.message);
+                res.json({ success: true, newPaid, newDebt });
+              }
+            );
+          } else {
+            res.json({ success: true, newPaid, newDebt });
+          }
+        }
+      );
+    });
   });
 });
 

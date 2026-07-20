@@ -1340,7 +1340,11 @@
         <div>
           <div class="st">👥 Xodimlar</div>
           <div class="ss" id="wc-cnt">0 xodim</div>
-        </div><button class="btn btn-p bsm" onclick="owm()">+ Xodim qo'shish</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-s bsm" onclick="showSalaryHistoryModal()">📜 Oyliklar tarixi</button>
+          <button class="btn btn-p bsm" onclick="owm()">+ Xodim qo'shish</button>
+        </div>
       </div>
       <div class="g4" style="margin-bottom:22px;" id="w-stats"></div>
       <div class="card">
@@ -1717,6 +1721,31 @@
           <div id="r-a"></div>
         </div>
       </div>
+
+      <div class="card" style="margin-top:22px;">
+        <div class="sh">
+          <div class="st">💼 Katta buyurtmalar (Holati)</div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Sana</th>
+                <th>Mijoz</th>
+                <th>Buyurtma nomi</th>
+                <th>Jami Summa</th>
+                <th>To'langan</th>
+                <th>Qarzi</th>
+                <th>Holat</th>
+                <th>Xodim</th>
+                <th>Amal</th>
+              </tr>
+            </thead>
+            <tbody id="r-debts" style="white-space:nowrap;"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- SETTINGS -->
@@ -2022,6 +2051,60 @@
     </div>
   </div>
 
+  <div class="mo" id="modal-pay-salary">
+    <div class="md">
+      <div class="mh">
+        <div class="mt">💸 Oylik berish / Avans</div><button class="mc" onclick="cm('modal-pay-salary')">✕</button>
+      </div>
+      <input type="hidden" id="ps-worker-id">
+      <div class="fg"><label class="fl">Xodim</label><input class="fi" id="ps-worker-name" readonly style="opacity:0.8;background:var(--bg3);"></div>
+      <div class="fg"><label class="fl">Qaysi oy uchun</label><input class="fi" type="month" id="ps-month"></div>
+      <div class="fg"><label class="fl">Beriladigan summa (so'm)</label><input class="fi" type="text" id="ps-amount" placeholder="0" oninput="fMo(this)"></div>
+      <div class="fg"><label class="fl">Berilgan sana</label><input class="fi" type="date" id="ps-date"></div>
+      <div class="fg"><label class="fl">Izoh (masalan: Avans / Oylik)</label><textarea class="fta" id="ps-note" placeholder="Izoh (ixtiyoriy)..."></textarea></div>
+      <div class="fg" style="display:flex;align-items:center;gap:8px;margin-top:6px;background:rgba(16,185,129,0.1);padding:10px;border-radius:8px;border:1px solid rgba(16,185,129,0.2);">
+        <input type="checkbox" id="ps-mark-closed" style="width:18px;height:18px;cursor:pointer;">
+        <label for="ps-mark-closed" style="cursor:pointer;font-size:13px;font-weight:600;color:var(--success);">Oylik to'liq yopildi deb belgilash ✅</label>
+      </div>
+      <div style="display:flex;gap:9px;margin-top:10px;"><button class="btn btn-s" style="flex:1;" onclick="submitSalaryPayment()">✅ Saqlash</button><button class="btn btn-o" onclick="cm('modal-pay-salary')">Bekor</button></div>
+    </div>
+  </div>
+
+  <div class="mo" id="modal-salary-history">
+    <div class="md" style="max-width:780px;width:95%;">
+      <div class="mh">
+        <div class="mt">📜 Oylik to'lovlar tarixi</div><button class="mc" onclick="cm('modal-salary-history')">✕</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <select class="fs" id="sh-worker-filter" onchange="renderSalaryHistoryTable()" style="flex:1;min-width:160px;">
+          <option value="all">Barcha xodimlar</option>
+        </select>
+        <input type="month" class="fi" id="sh-month-filter" onchange="renderSalaryHistoryTable()" style="width:auto;">
+        <button class="btn btn-o bsm" style="padding:7px 12px;" onclick="resetHistoryMonthFilter()">Barcha oylar</button>
+      </div>
+      <div id="sh-summary" style="margin-bottom:12px;padding:10px 14px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"></div>
+      <div class="tw" style="max-height:350px;overflow-y:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Xodim</th>
+              <th>Oy</th>
+              <th>Summa</th>
+              <th>Berilgan sana</th>
+              <th>Izoh</th>
+              <th>Amal</th>
+            </tr>
+          </thead>
+          <tbody id="sh-tb"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:9px;margin-top:15px;">
+        <button class="btn btn-o" style="flex:1;" onclick="cm('modal-salary-history')">Yopish</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast-el"></div>
 
   <script>
@@ -2302,44 +2385,216 @@
       await D.s('attendance', rec); cm('modal-att'); await rAtt(); toast2('Davomat saqlandi!');
     }
 
+    let salaryClosuresCache = [];
+
     async function rWk() {
       const wks = await D.g('workers');
       const sals = await D.g('salaries');
+      salaryClosuresCache = await D.g('salaries/closures');
       document.getElementById('wc-cnt').textContent = wks.length + ' xodim';
       const roles = {}; wks.forEach(w => { roles[w.role] = (roles[w.role] || 0) + 1 });
       document.getElementById('w-stats').innerHTML = Object.entries(roles).slice(0, 4).map(([r, c]) => `<div class="card sc"><div class="lbl">${r}</div><div class="val" style="color:var(--primary-light)">${c}</div><div class="ib">👤</div></div>`).join('');
-      rWT(wks, sals);
+      rWT(wks, sals, salaryClosuresCache);
     }
-    function rWT(wks, sals = []) {
+
+    function rWT(wks, sals = [], closures = []) {
       const curMonth = new Date().toISOString().slice(0, 7);
       document.getElementById('w-tb').innerHTML = wks.map((w, i) => {
-        const isPaid = sals.some(s => s.worker_id === w.id && s.month === curMonth);
-        const actionBtn = isPaid
-          ? `<span style="color:var(--success);font-size:12px;font-weight:700;">✅ Oylik berildi</span>`
-          : `<button class="btn btn-s bsm" style="padding:4px 8px;font-size:11px;" onclick="pW(${w.id}, '${w.name}', ${w.salary})">💸 Oylik</button>`;
+        const workerSals = sals.filter(s => s.worker_id === w.id && s.month === curMonth);
+        const paidSum = workerSals.reduce((a, b) => a + (b.amount || 0), 0);
+        const isClosed = closures.some(c => c.worker_id === w.id && c.month === curMonth);
 
-        return `<tr><td>${i + 1}</td><td><div style="display:flex;align-items:center;gap:9px;"><div class="wa" style="width:32px;height:32px;font-size:13px;background:var(--bg3)">${w.name[0]}</div><strong>${w.name}</strong></div></td><td><span class="pill pp">${w.role}</span></td><td><strong>${fmt(w.salary)}</strong></td><td>${w.phone || '—'}</td><td><span class="pill pg">Aktiv</span></td><td><div style="display:flex;align-items:center;gap:5px;">${actionBtn}<button class="bi" onclick="dW(${w.id})">🗑</button></div></td></tr>`;
-      }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text3);">Xodimlar yo\'q</td></tr>'
+        let statusHtml = '';
+        if (isClosed) {
+          statusHtml = `<span style="color:var(--success);font-size:12px;font-weight:700;">✅ Oylik yopildi (${fmt(paidSum)})</span>`;
+        } else if (paidSum > 0) {
+          statusHtml = `<span style="color:var(--warning);font-size:12px;font-weight:700;">💸 Berildi: ${fmt(paidSum)}</span>`;
+        } else {
+          statusHtml = `<span style="color:var(--text3);font-size:12px;">To'lanmagan</span>`;
+        }
+
+        const payBtn = `<button class="btn btn-s bsm" style="padding:4px 8px;font-size:11px;" onclick="openPaySalaryModal(${w.id}, '${w.name}', ${w.salary})">💸 Oylik</button>`;
+        const historyBtn = `<button class="btn btn-o bsm" style="padding:4px 8px;font-size:11px;" onclick="showSalaryHistoryModal(${w.id})">📜 Tarix</button>`;
+
+        return `<tr>
+          <td>${i + 1}</td>
+          <td><div style="display:flex;align-items:center;gap:9px;"><div class="wa" style="width:32px;height:32px;font-size:13px;background:var(--bg3)">${w.name[0]}</div><strong>${w.name}</strong></div></td>
+          <td><span class="pill pp">${w.role}</span></td>
+          <td><strong>${fmt(w.salary)}</strong></td>
+          <td>${w.phone || '—'}</td>
+          <td>${statusHtml}</td>
+          <td><div style="display:flex;align-items:center;gap:5px;">${payBtn}${historyBtn}<button class="bi" onclick="dW(${w.id})">🗑</button></div></td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text3);">Xodimlar yo\'q</td></tr>';
     }
-    async function pW(id, name, salary) {
-      if (!confirm(`${name}ga ${fmt(salary)} oylik berilganini tasdiqlaysizmi?`)) return;
-      const curMonth = new Date().toISOString().slice(0, 7);
-      const rec = { worker_id: id, worker_name: name, amount: salary, month: curMonth };
+
+    async function openPaySalaryModal(id, name, salary) {
+      document.getElementById('ps-worker-id').value = id;
+      document.getElementById('ps-worker-name').value = name;
       
+      const curMonth = new Date().toISOString().slice(0, 7);
+      document.getElementById('ps-month').value = curMonth;
+      document.getElementById('ps-date').value = td();
+      document.getElementById('ps-note').value = '';
+      document.getElementById('ps-mark-closed').checked = false;
+
+      // Calculate remaining balance for current month
+      const sals = await D.g('salaries');
+      const paidSum = sals.filter(s => s.worker_id === id && s.month === curMonth).reduce((a, b) => a + (b.amount || 0), 0);
+      const remaining = Math.max(0, (salary || 0) - paidSum);
+      
+      document.getElementById('ps-amount').value = (remaining > 0 ? remaining : salary || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      om('modal-pay-salary');
+    }
+
+    async function submitSalaryPayment() {
+      const worker_id = parseInt(document.getElementById('ps-worker-id').value);
+      const worker_name = document.getElementById('ps-worker-name').value;
+      const amount = gV('ps-amount');
+      const month = document.getElementById('ps-month').value;
+      const paid_at = document.getElementById('ps-date').value;
+      const note = document.getElementById('ps-note').value.trim();
+      const mark_closed = document.getElementById('ps-mark-closed').checked;
+
+      if (!amount && !mark_closed) {
+        toast2('Summa kiritilmagan!', 'e');
+        return;
+      }
+      if (!month) {
+        toast2('Oy kiritilmagan!', 'e');
+        return;
+      }
+
+      const rec = { worker_id, worker_name, amount, month, paid_at, note, mark_closed };
+
       const res = await fetch(`${API_URL}/salaries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rec)
       });
-      
+
       if (res.ok) {
-        toast2(`${name}ga oylik berildi va chiqimlarga qo'shildi!`);
+        toast2(`${worker_name}ga to'lov saqlandi!`);
+        cm('modal-pay-salary');
         await rWk();
-        if (document.getElementById('page-expenses').classList.contains('active')) rEx();
-        if (document.getElementById('page-dashboard').classList.contains('active')) rD();
+        if (document.getElementById('page-expenses')?.classList.contains('active')) rE();
+        if (document.getElementById('page-dashboard')?.classList.contains('active')) rD();
       } else {
         toast2('Xatolik yuz berdi!', 'e');
       }
+    }
+
+    let currentSalariesCache = [];
+    async function showSalaryHistoryModal(targetWorkerId = null) {
+      const wks = await D.g('workers');
+      const sel = document.getElementById('sh-worker-filter');
+      sel.innerHTML = '<option value="all">Barcha xodimlar</option>' + wks.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+      
+      if (targetWorkerId) {
+        sel.value = targetWorkerId;
+      } else {
+        sel.value = 'all';
+      }
+
+      // Default history modal month filter to CURRENT MONTH & YEAR
+      const curMonth = new Date().toISOString().slice(0, 7);
+      document.getElementById('sh-month-filter').value = curMonth;
+
+      currentSalariesCache = await D.g('salaries');
+      salaryClosuresCache = await D.g('salaries/closures');
+      renderSalaryHistoryTable();
+      om('modal-salary-history');
+    }
+
+    function resetHistoryMonthFilter() {
+      document.getElementById('sh-month-filter').value = '';
+      renderSalaryHistoryTable();
+    }
+
+    function renderSalaryHistoryTable() {
+      const selectedWorker = document.getElementById('sh-worker-filter').value;
+      const selectedMonth = document.getElementById('sh-month-filter').value;
+
+      let list = currentSalariesCache || [];
+      if (selectedWorker !== 'all') {
+        const wid = parseInt(selectedWorker);
+        list = list.filter(s => s.worker_id === wid);
+      }
+      if (selectedMonth) {
+        list = list.filter(s => s.month === selectedMonth);
+      }
+
+      // Render summary info bar
+      const totalPaidInView = list.reduce((a, b) => a + (b.amount || 0), 0);
+      const summaryEl = document.getElementById('sh-summary');
+      
+      let summaryText = `<span>Oy: <strong>${selectedMonth || 'Barcha oylar'}</strong></span> <span>To'langan jami: <strong style="color:var(--success);">${fmt(totalPaidInView)}</strong></span>`;
+
+      if (selectedWorker !== 'all' && selectedMonth) {
+        const wid = parseInt(selectedWorker);
+        const isClosed = salaryClosuresCache.some(c => c.worker_id === wid && c.month === selectedMonth);
+        const btnText = isClosed ? '❌ Yopilishini bekor qilish' : '✅ Oylikni to\'liq yopish';
+        const btnCls = isClosed ? 'btn-o' : 'btn-s';
+        summaryText += `<button class="btn ${btnCls} bsm" style="padding:4px 10px;font-size:11px;" onclick="toggleMonthClosure(${wid}, '${selectedMonth}', ${isClosed})">${btnText}</button>`;
+      }
+
+      summaryEl.innerHTML = summaryText;
+
+      const tbody = document.getElementById('sh-tb');
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px;">${selectedMonth ? selectedMonth + ' oyida' : ''} to'lovlar tarixi topilmadi</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map((s, i) => {
+        const dateStr = s.paid_at || '—';
+        return `
+          <tr>
+            <td>${i + 1}</td>
+            <td><strong>${s.worker_name || '—'}</strong></td>
+            <td><span class="pill pb">${s.month || '—'}</span></td>
+            <td style="color:var(--success);font-weight:700;">${fmt(s.amount)}</td>
+            <td><span style="font-size:12px;color:var(--text2);">${dateStr}</span></td>
+            <td>${s.note || '—'}</td>
+            <td><button class="bi" onclick="deleteSalaryPayment(${s.id})">🗑</button></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function toggleMonthClosure(workerId, month, currentStatus) {
+      const endpoint = currentStatus ? '/api/salaries/unclose' : '/api/salaries/close';
+      const res = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ worker_id: workerId, month })
+      });
+
+      if (res.ok) {
+        toast2(currentStatus ? 'Oy yopilishi bekor qilindi' : 'Oy to\'liq yopildi deb belgilandi!', 's');
+        salaryClosuresCache = await D.g('salaries/closures');
+        renderSalaryHistoryTable();
+        await rWk();
+      }
+    }
+
+    async function deleteSalaryPayment(id) {
+      if (!confirm('Ushbu oylik to\'lovi yozuvini o\'chirishni tasdiqlaysizmi?')) return;
+      const res = await fetch(`${API_URL}/salaries/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast2('Oylik to\'lovi o\'chirildi', 's');
+        currentSalariesCache = await D.g('salaries');
+        renderSalaryHistoryTable();
+        await rWk();
+        if (document.getElementById('page-expenses')?.classList.contains('active')) rE();
+        if (document.getElementById('page-dashboard')?.classList.contains('active')) rD();
+      } else {
+        toast2('O\'chirishda xatolik!', 'e');
+      }
+    }
+
+    async function pW(id, name, salary) {
+      openPaySalaryModal(id, name, salary);
     }
     async function fw(q) { const wks = await D.g('workers'); rWT(wks.filter(w => w.name.toLowerCase().includes(q.toLowerCase()) || w.role.toLowerCase().includes(q.toLowerCase()))) }
     function owm() { ['wm-n', 'wm-p', 'wm-s'].forEach(id => document.getElementById(id).value = ''); document.getElementById('wm-d').value = td(); om('modal-wk') }
@@ -2794,10 +3049,14 @@
       const allAtt = await D.g('attendance');
       let att = allAtt.filter(a => a.date === date);
 
+      let allDebts = await D.g('debts');
+      let debts = allDebts.filter(d => (d.created_at?.startsWith(date) || d.debt_amount > 0));
+
       if (rWF !== 'all') {
         sales = sales.filter(s => (s.worker_group === rWF || (!s.worker_group && s.worker_name === rWF)));
         exp = exp.filter(e => e.worker_name === rWF);
         att = att.filter(a => (a.workerName === rWF || (a.workerName && a.workerName.includes(rWF))));
+        debts = debts.filter(d => (d.worker_group === rWF || (!d.worker_group && d.worker_name === rWF)));
       }
 
       const ts = sales.reduce((a, b) => a + (b.amount || b.total_amount), 0);
@@ -2839,6 +3098,57 @@
       }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);">Chiqim yo\'q</td></tr>';
 
       document.getElementById('r-a').innerHTML = att.map(a => `<div style="display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--border);font-size:12.5px;"><span style="color:var(--text2)">${a.workerName}</span><span>${sMap[a.status] || a.status}</span><span style="color:var(--text3)">${a.timeIn || '—'}</span></div>`).join('') || '<div style="color:var(--text3);font-size:13px;text-align:center;padding:9px;">Davomat belgilanmagan</div>';
+
+      document.getElementById('r-debts').innerHTML = debts.map((d, i) => {
+        const dateStr = d.created_at ? d.created_at.split(' ')[0] : '—';
+        let stBadge = '';
+        if (d.debt_amount === 0) {
+          stBadge = '<span class="pill pg">✅ Yopilgan</span>';
+        } else if (d.paid_amount > 0) {
+          stBadge = `<span class="pill py">⏳ Qisman to'langan (${fmt(d.debt_amount)} qarz)</span>`;
+        } else {
+          stBadge = `<span class="pill pr">❌ Yopilmagan (${fmt(d.debt_amount)} qarz)</span>`;
+        }
+
+        const actionBtn = d.debt_amount > 0 
+          ? `<button class="btn btn-s bsm" style="padding:4px 8px;font-size:11px;" onclick="payDebtFromReports(${d.id})">💰 To'lash</button>`
+          : '<span style="color:var(--success);font-size:11px;font-weight:700;">✅ Yopildi</span>';
+
+        return `<tr>
+          <td>${i + 1}</td>
+          <td>${dateStr}</td>
+          <td><strong>${d.client_name}</strong></td>
+          <td>${d.service_name || '—'}</td>
+          <td>${fmt(d.total_amount)}</td>
+          <td><strong style="color:var(--success)">${fmt(d.paid_amount)}</strong></td>
+          <td><strong style="color:var(--danger)">${fmt(d.debt_amount)}</strong></td>
+          <td>${stBadge}</td>
+          <td>${d.worker_name || '—'}</td>
+          <td>${actionBtn}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--text3);">Katta buyurtmalar yo\'q</td></tr>';
+    }
+
+    async function payDebtFromReports(id) {
+      const amountStr = prompt('To\'lanayotgan summani kiriting (so\'mda):');
+      if (!amountStr) return;
+      const amount = parseInt(amountStr.replace(/\D/g, ''));
+      if (!amount || amount <= 0) return toast2('Noto\'g\'ri summa!', 'e');
+
+      const res = await fetch(`${API_URL}/debts/${id}/pay`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      });
+
+      if (res.ok) {
+        toast2('To\'lov qabul qilindi va bugungi savdoga qo\'shildi!', 's');
+        await rR();
+        if (document.getElementById('page-sales')?.classList.contains('active')) rS();
+        if (document.getElementById('page-dashboard')?.classList.contains('active')) rD();
+      } else {
+        toast2('Xatolik yuz berdi!', 'e');
+      }
     }
 
     async function rSet() {

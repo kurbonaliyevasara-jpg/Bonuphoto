@@ -119,12 +119,34 @@ db.serialize(() => {
     CREATE TABLE IF NOT EXISTS salary_payments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       worker_id INTEGER,
+      worker_name TEXT,
       amount INTEGER,
       month TEXT,
+      note TEXT,
       paid_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(worker_id) REFERENCES workers(id)
     )
   `);
+
+  // Salary Closures table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS salary_closures (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      worker_id INTEGER,
+      month TEXT,
+      closed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(worker_id, month)
+    )
+  `);
+
+  // Migration for salary_payments table
+  db.all("PRAGMA table_info(salary_payments)", (err, rows) => {
+    if (err || !rows) return;
+    const hasWorkerName = rows.some(r => r.name === 'worker_name');
+    const hasNote = rows.some(r => r.name === 'note');
+    if (!hasWorkerName) db.run("ALTER TABLE salary_payments ADD COLUMN worker_name TEXT");
+    if (!hasNote) db.run("ALTER TABLE salary_payments ADD COLUMN note TEXT");
+  });
 
   // Migration for existing clients table
   db.all("PRAGMA table_info(clients)", (err, rows) => {
